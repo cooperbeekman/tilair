@@ -16,60 +16,56 @@
         html, body {
             margin: 0;
             padding: 0;
-            background: #fff;
             height: 100%;
             width: 100%;
             overflow: hidden;
+            background: #fff;
         }
 
-        svg#main {
+        #container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            filter: contrast(25);
+            -webkit-filter: contrast(25);
         }
 
-        .text {
+        #text1, #text2 {
+            position: absolute;
             font-family: 'Raleway', sans-serif;
             font-weight: 900;
-            font-size: 80px;
-            fill: #000;
-            text-anchor: middle;
-            dominant-baseline: middle;
+            font-size: 80pt;
+            text-align: center;
+            color: #000;
+            user-select: none;
+            -webkit-user-select: none;
+            white-space: nowrap;
         }
 
         @media (max-width: 768px) {
-            .text {
-                font-size: 40px;
+            #text1, #text2 {
+                font-size: 36pt;
             }
         }
 
         @media (max-width: 480px) {
-            .text {
-                font-size: 28px;
+            #text1, #text2 {
+                font-size: 28pt;
             }
-        }
-
-        .gooey {
-            filter: url(#goo);
         }
     </style>
 </head>
 <body>
-    <svg id="main" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <filter id="goo">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -14" result="goo" />
-                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-            </filter>
-        </defs>
-        <g class="gooey">
-            <text id="text1" class="text" x="50%" y="50%"></text>
-            <text id="text2" class="text" x="50%" y="50%"></text>
-        </g>
-    </svg>
+    <div id="container">
+        <span id="text1"></span>
+        <span id="text2"></span>
+    </div>
 
     <script>
         const elts = {
@@ -90,6 +86,11 @@
         elts.text1.textContent = texts[textIndex % texts.length];
         elts.text2.textContent = texts[(textIndex + 1) % texts.length];
 
+        function setBlur(el, blur) {
+            el.style.filter = `blur(${blur}px)`;
+            el.style.webkitFilter = `blur(${blur}px)`;
+        }
+
         function doMorph() {
             morph -= cooldown;
             cooldown = 0;
@@ -105,12 +106,12 @@
         }
 
         function setMorph(fraction) {
-            elts.text2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-            elts.text2.style.opacity = Math.pow(fraction, 0.4);
+            setBlur(elts.text2, Math.min(8 / fraction - 8, 100));
+            elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
             fraction = 1 - fraction;
-            elts.text1.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
-            elts.text1.style.opacity = Math.pow(fraction, 0.4);
+            setBlur(elts.text1, Math.min(8 / fraction - 8, 100));
+            elts.text1.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
             elts.text1.textContent = texts[textIndex % texts.length];
             elts.text2.textContent = texts[(textIndex + 1) % texts.length];
@@ -119,11 +120,11 @@
         function doCooldown() {
             morph = 0;
 
-            elts.text2.style.filter = "";
-            elts.text2.style.opacity = 1;
+            setBlur(elts.text2, 0);
+            elts.text2.style.opacity = "100%";
 
-            elts.text1.style.filter = "";
-            elts.text1.style.opacity = 0;
+            setBlur(elts.text1, 0);
+            elts.text1.style.opacity = "0%";
         }
 
         function animate() {
