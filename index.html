@@ -7,41 +7,50 @@
     <style>
         @import url('https://fonts.googleapis.com/css?family=Raleway:900&display=swap');
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             background: #fff;
             height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        #container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        #container {
-            position: absolute;
-            margin: auto;
-            width: 100vw;
-            height: 80pt;
-            top: 0;
-            bottom: 0;
-        }
-
         #text1, #text2 {
             position: absolute;
-            width: 100%;
-            display: inline-block;
             font-family: 'Raleway', sans-serif;
             font-size: 80pt;
             text-align: center;
             color: #000;
             user-select: none;
+            white-space: nowrap;
         }
 
         @media (max-width: 768px) {
             #text1, #text2 {
-                font-size: 40pt;
+                font-size: 36pt;
             }
-            #container {
-                height: 40pt;
+        }
+
+        @media (max-width: 480px) {
+            #text1, #text2 {
+                font-size: 28pt;
             }
         }
 
@@ -55,13 +64,14 @@
             width: 0;
             height: 0;
             overflow: hidden;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <svg class="filters" xmlns="http://www.w3.org/2000/svg" version="1.1">
         <defs>
-            <filter id="filter">
+            <filter id="filter" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
                 <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
                 <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -14" result="filter" />
                 <feComposite in="SourceGraphic" in2="filter" operator="atop" />
@@ -80,7 +90,7 @@
             text2: document.getElementById("text2")
         };
 
-        const texts = ["...", "..", ".", "Tilair", "Is", "A", "Holding", "Company", "/", "Venture", "Studio", "Based", "In", "Puerto Rico 🇵🇷", "That", "Builds", "and", "Invests", "In", "Crypto", "AI", "Health Tech", "Online Education", "Defense Tech", "For", "All", "Inquiries", "Email", "cole", "@", "tilair.com"];
+        const texts = ["...", "..", ".", "Tilair", "Is", "A", "Holding", "Company", "/", "Venture", "Studio", "Based", "In", "Puerto Rico", "That", "Builds", "and", "Invests", "In", "Crypto", "AI", "Health Tech", "Online Education", "Defense Tech", "For", "All", "Inquiries", "Email", "cole", "@", "tilair.com"];
 
         const morphTime = 1;
         const cooldownTime = 0.25;
@@ -107,12 +117,20 @@
             setMorph(fraction);
         }
 
+        function setBlur(el, blur) {
+            const val = `blur(${blur}px)`;
+            el.style.filter = val;
+            el.style.webkitFilter = val;
+        }
+
         function setMorph(fraction) {
-            elts.text2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+            const blur2 = Math.min(8 / fraction - 8, 100);
+            setBlur(elts.text2, blur2);
             elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
             fraction = 1 - fraction;
-            elts.text1.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+            const blur1 = Math.min(8 / fraction - 8, 100);
+            setBlur(elts.text1, blur1);
             elts.text1.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
             elts.text1.textContent = texts[textIndex % texts.length];
@@ -122,10 +140,10 @@
         function doCooldown() {
             morph = 0;
 
-            elts.text2.style.filter = "";
+            setBlur(elts.text2, 0);
             elts.text2.style.opacity = "100%";
 
-            elts.text1.style.filter = "";
+            setBlur(elts.text1, 0);
             elts.text1.style.opacity = "0%";
         }
 
