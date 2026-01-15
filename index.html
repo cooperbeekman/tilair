@@ -5,42 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tilair</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        @import url('https://fonts.googleapis.com/css?family=Raleway:900&display=swap');
 
         body {
+            margin: 0;
             background: #000;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
         }
 
         #container {
+            position: absolute;
+            margin: auto;
+            width: 100vw;
+            height: 80pt;
+            top: 0;
+            bottom: 0;
             filter: url(#threshold) blur(0.6px);
             -webkit-filter: url(#threshold) blur(0.6px);
             will-change: filter;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100vh;
         }
 
         #text1, #text2 {
             position: absolute;
             width: 100%;
+            display: inline-block;
+            font-family: 'Raleway', sans-serif;
+            font-size: 80pt;
             text-align: center;
             color: #fff;
-            font-size: 62px;
-            font-weight: bold;
             user-select: none;
             -webkit-user-select: none;
             will-change: filter, opacity;
@@ -48,21 +41,15 @@
             -webkit-transform: translateZ(0);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            padding: 0 20px;
         }
 
         @media (max-width: 768px) {
             #text1, #text2 {
-                font-size: 36px;
+                font-size: 40pt;
             }
-        }
-
-        /* Hide SVG filter visually */
-        #filters {
-            position: absolute;
-            width: 0;
-            height: 0;
-            overflow: hidden;
+            #container {
+                height: 40pt;
+            }
         }
     </style>
 </head>
@@ -72,23 +59,18 @@
         <span id="text2"></span>
     </div>
 
-    <!-- Merging Effect SVG Filter -->
     <svg id="filters">
         <defs>
             <filter id="threshold">
-                <feColorMatrix
-                    in="SourceGraphic"
+                <feColorMatrix in="SourceGraphic"
                     type="matrix"
                     values="1 0 0 0 0
                             0 1 0 0 0
                             0 0 1 0 0
-                            0 0 0 255 -140"
-                />
+                            0 0 0 255 -140" />
             </filter>
         </defs>
     </svg>
-
-    <!-- Morphing Animation Script -->
     <script>
         const elts = {
             text1: document.getElementById("text1"),
@@ -101,7 +83,7 @@
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const maxBlur = isMobile ? 4 : 8;
 
-        const morphTime = 0.7;
+        const morphTime = 1;
         const cooldownTime = 0.25;
         let textIndex = texts.length - 1;
         let time = new Date();
