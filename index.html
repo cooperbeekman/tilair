@@ -7,59 +7,30 @@
     <style>
         @import url('https://fonts.googleapis.com/css?family=Raleway:900&display=swap');
 
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            margin: 0px;
             background: #fff;
+            overflow: hidden;
         }
 
-        #container {
+        canvas {
             position: absolute;
-            margin: auto;
-            width: 100vw;
-            height: 80pt;
-            top: 0;
-            bottom: 0;
-            filter: url(#threshold) blur(1px);
-            -webkit-filter: url(#threshold) blur(1px);
-        }
-
-        #text1, #text2 {
-            position: absolute;
-            width: 100%;
-            display: inline-block;
-            font-family: 'Raleway', sans-serif;
-            font-size: 80pt;
-            text-align: center;
-            color: #000;
-            user-select: none;
-            -webkit-user-select: none;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <span id="text1"></span>
-        <span id="text2"></span>
-    </div>
-
-    <svg id="filters" style="position:absolute;width:0;height:0;overflow:hidden;">
-        <defs>
-            <filter id="threshold" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
-                <feColorMatrix in="SourceGraphic"
-                    type="matrix"
-                    values="1 0 0 0 0
-                            0 1 0 0 0
-                            0 0 1 0 0
-                            0 0 0 255 -100" />
-            </filter>
-        </defs>
-    </svg>
+    <canvas id="canvas"></canvas>
 
     <script>
-        const elts = {
-            text1: document.getElementById("text1"),
-            text2: document.getElementById("text2")
-        };
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
 
         const texts = ["...", "..", ".", "Tilair", "Is", "A", "Holding", "Company", "/", "Venture", "Studio", "Based", "In", "Puerto Rico 🇵🇷", "That", "Builds", "and", "Invests", "In", "Crypto", "AI", "Health Tech", "Online Education", "Defense Tech", "For", "All", "Inquiries", "Email", "cole", "@", "tilair.com"];
 
@@ -71,8 +42,20 @@
         let morph = 0;
         let cooldown = cooldownTime;
 
-        elts.text1.textContent = texts[textIndex % texts.length];
-        elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+        // Set canvas size
+        function resize() {
+            canvas.width = window.innerWidth * 2;
+            canvas.height = window.innerHeight * 2;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        function getFontSize() {
+            const baseSize = Math.min(window.innerWidth, window.innerHeight);
+            return Math.max(baseSize * 0.15, 40) * 2; // *2 for retina
+        }
 
         function doMorph() {
             morph -= cooldown;
@@ -85,35 +68,76 @@
                 fraction = 1;
             }
 
-            setMorph(fraction);
-        }
-
-        function setMorph(fraction) {
-            const blur2 = `blur(${Math.min(12 / fraction - 12, 100)}px)`;
-            elts.text2.style.filter = blur2;
-            elts.text2.style.webkitFilter = blur2;
-            elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-
-            fraction = 1 - fraction;
-            const blur1 = `blur(${Math.min(12 / fraction - 12, 100)}px)`;
-            elts.text1.style.filter = blur1;
-            elts.text1.style.webkitFilter = blur1;
-            elts.text1.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
-
-            elts.text1.textContent = texts[textIndex % texts.length];
-            elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+            return fraction;
         }
 
         function doCooldown() {
             morph = 0;
+            return 1; // fraction = 1 means text2 is fully visible
+        }
 
-            elts.text2.style.filter = "";
-            elts.text2.style.webkitFilter = "";
-            elts.text2.style.opacity = "100%";
+        function drawText(text, opacity, blur) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            if (blur > 0.5) {
+                ctx.filter = `blur(${blur}px)`;
+            }
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            ctx.restore();
+        }
 
-            elts.text1.style.filter = "";
-            elts.text1.style.webkitFilter = "";
-            elts.text1.style.opacity = "0%";
+        function render(fraction) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const fontSize = getFontSize();
+            ctx.font = `900 ${fontSize}px Raleway, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#000';
+
+            const text1 = texts[textIndex % texts.length];
+            const text2 = texts[(textIndex + 1) % texts.length];
+
+            // Calculate blur and opacity for each text
+            const blur2 = Math.min(12 / fraction - 12, 100);
+            const opacity2 = Math.pow(fraction, 0.4);
+
+            const blur1 = Math.min(12 / (1 - fraction) - 12, 100);
+            const opacity1 = Math.pow(1 - fraction, 0.4);
+
+            // Draw text1 (fading out)
+            if (opacity1 > 0.01) {
+                drawText(text1, opacity1, Math.min(blur1, 50));
+            }
+
+            // Draw text2 (fading in)
+            if (opacity2 > 0.01) {
+                drawText(text2, opacity2, Math.min(blur2, 50));
+            }
+
+            // Apply threshold effect by redrawing with contrast
+            applyThreshold();
+        }
+
+        function applyThreshold() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const threshold = 100;
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Get alpha value
+                const a = data[i + 3];
+
+                // Apply threshold to alpha
+                if (a > threshold) {
+                    data[i + 3] = 255; // Full opacity
+                } else {
+                    // Scale alpha more aggressively for gooey effect
+                    data[i + 3] = Math.max(0, (a - threshold * 0.4) * 2.5);
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
         }
 
         function animate() {
@@ -126,18 +150,23 @@
 
             cooldown -= dt;
 
+            let fraction;
             if (cooldown <= 0) {
                 if (shouldIncrementIndex) {
                     textIndex++;
                 }
-
-                doMorph();
+                fraction = doMorph();
             } else {
-                doCooldown();
+                fraction = doCooldown();
             }
+
+            render(fraction);
         }
 
-        animate();
+        // Wait for font to load
+        document.fonts.ready.then(() => {
+            animate();
+        });
     </script>
 </body>
 </html>
