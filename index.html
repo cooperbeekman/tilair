@@ -19,8 +19,8 @@
             height: 80pt;
             top: 0;
             bottom: 0;
-            filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='threshold'%3E%3CfeColorMatrix in='SourceGraphic' type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 255 -100'/%3E%3C/filter%3E%3C/svg%3E#threshold") blur(1px);
-            -webkit-filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='threshold'%3E%3CfeColorMatrix in='SourceGraphic' type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 255 -100'/%3E%3C/filter%3E%3C/svg%3E#threshold") blur(1px);
+            filter: url(#threshold) blur(1px);
+            -webkit-filter: url(#threshold) blur(1px);
         }
 
         #text1, #text2 {
@@ -42,9 +42,9 @@
         <span id="text2"></span>
     </div>
 
-    <svg id="filters">
+    <svg id="filters" style="position:absolute;width:0;height:0;overflow:hidden;">
         <defs>
-            <filter id="threshold">
+            <filter id="threshold" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
                 <feColorMatrix in="SourceGraphic"
                     type="matrix"
                     values="1 0 0 0 0
