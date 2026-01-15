@@ -8,7 +8,7 @@
         @import url('https://fonts.googleapis.com/css?family=Raleway:900&display=swap');
 
         body {
-            margin: 0px;
+            margin: 0;
             background: #fff;
         }
 
@@ -20,6 +20,10 @@
             top: 0;
             bottom: 0;
             filter: url(#threshold) blur(0.6px);
+            -webkit-filter: url(#threshold) blur(0.6px);
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: filter;
         }
 
         #text1, #text2 {
@@ -27,10 +31,17 @@
             width: 100%;
             display: inline-block;
             font-family: 'Raleway', sans-serif;
+            font-weight: 900;
             font-size: 80pt;
             text-align: center;
             color: #000;
             user-select: none;
+            -webkit-user-select: none;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: filter, opacity;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
 
         @media (max-width: 768px) {
@@ -44,23 +55,21 @@
     </style>
 </head>
 <body>
+    <svg id="filters" xmlns="http://www.w3.org/2000/svg" style="position:absolute;visibility:hidden;width:0;height:0;">
+        <defs>
+            <filter id="threshold" x="-50%" y="-50%" width="200%" height="200%">
+                <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0
+                        0 1 0 0 0
+                        0 0 1 0 0
+                        0 0 0 255 -140" />
+            </filter>
+        </defs>
+    </svg>
+
     <div id="container">
         <span id="text1"></span>
         <span id="text2"></span>
     </div>
-
-    <svg id="filters">
-        <defs>
-            <filter id="threshold">
-                <feColorMatrix in="SourceGraphic"
-                        type="matrix"
-                        values="1 0 0 0 0
-                                0 1 0 0 0
-                                0 0 1 0 0
-                                0 0 0 255 -140" />
-            </filter>
-        </defs>
-    </svg>
 
     <script>
         const elts = {
@@ -97,10 +106,12 @@
 
         function setMorph(fraction) {
             elts.text2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+            elts.text2.style.webkitFilter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
             elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
             fraction = 1 - fraction;
             elts.text1.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+            elts.text1.style.webkitFilter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
             elts.text1.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
             elts.text1.textContent = texts[textIndex % texts.length];
@@ -111,9 +122,11 @@
             morph = 0;
 
             elts.text2.style.filter = "";
+            elts.text2.style.webkitFilter = "";
             elts.text2.style.opacity = "100%";
 
             elts.text1.style.filter = "";
+            elts.text1.style.webkitFilter = "";
             elts.text1.style.opacity = "0%";
         }
 
