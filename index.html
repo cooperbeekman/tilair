@@ -14,8 +14,28 @@
     background: #000;
     height: 100vh;
     overflow: hidden;
+    font-family: 'Courier New', monospace;
   }
 
+  /* Full screen ASCII background */
+  #ascii-bg {
+    position: fixed;
+    inset: 0;
+    color: #0a0a0a;
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: pre;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    transition: color 0.3s;
+  }
+
+  #ascii-bg.active {
+    color: #1a1a1a;
+  }
+
+  /* Main text container */
   #container {
     position: absolute;
     margin: auto;
@@ -24,6 +44,7 @@
     top: 0;
     bottom: 0;
     filter: url(#threshold) blur(0.6px);
+    z-index: 10;
   }
 
   #text1, #text2 {
@@ -31,99 +52,79 @@
     width: 100%;
     display: inline-block;
     font-family: 'Raleway', sans-serif;
-    font-size: clamp(40pt, 10vw, 90pt);
+    font-size: clamp(36pt, 12vw, 100pt);
     text-align: center;
     user-select: none;
     color: #fff;
-  }
-
-  /* Glow effect */
-  #container::after {
-    content: attr(data-text);
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    font-family: 'Raleway', sans-serif;
-    font-size: clamp(40pt, 10vw, 90pt);
-    text-align: center;
-    color: transparent;
     text-shadow:
-      0 0 30px rgba(255,255,255,0.3),
-      0 0 60px rgba(255,255,255,0.1);
-    pointer-events: none;
-    filter: blur(8px);
-    opacity: 0.5;
+      0 0 20px rgba(255,255,255,0.5),
+      0 0 40px rgba(255,255,255,0.3),
+      0 0 80px rgba(255,255,255,0.1);
   }
 
-  /* Scanlines */
-  body::before {
-    content: '';
+  /* Floating ASCII particles */
+  #particles {
     position: fixed;
     inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.03) 0px,
-      rgba(0, 0, 0, 0.03) 1px,
-      transparent 1px,
-      transparent 2px
-    );
     pointer-events: none;
-    z-index: 100;
+    z-index: 5;
+    overflow: hidden;
   }
 
-  /* Scramble text overlay */
-  #scramble {
+  .particle {
     position: absolute;
-    width: 100%;
-    height: 120pt;
-    top: 50%;
-    transform: translateY(-50%);
-    font-family: 'Courier New', monospace;
-    font-size: clamp(40pt, 10vw, 90pt);
+    color: #333;
+    font-size: 24px;
     font-weight: bold;
-    text-align: center;
-    color: rgba(255,255,255,0.15);
-    pointer-events: none;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #scramble span {
-    display: inline-block;
+    animation: float 2s ease-in-out infinite;
     opacity: 0;
-    transition: opacity 0.1s;
+    transition: opacity 0.2s, color 0.2s;
   }
 
-  #scramble.active span {
+  .particle.active {
     opacity: 1;
-    animation: scrambleChar 0.1s steps(1) infinite;
+    color: #fff;
+    text-shadow: 0 0 10px #fff;
   }
 
-  @keyframes scrambleChar {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-2px); }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(10deg); }
+  }
+
+  /* Center scramble */
+  #scramble {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Courier New', monospace;
+    font-size: clamp(48pt, 15vw, 140pt);
+    font-weight: bold;
+    color: rgba(255,255,255,0.08);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 2;
+    letter-spacing: -0.02em;
   }
 </style>
 </head>
 
 <body>
 
-<div id="container" data-text="">
+<div id="ascii-bg"></div>
+<div id="particles"></div>
+<div id="scramble"></div>
+
+<div id="container">
   <span id="text1"></span>
   <span id="text2"></span>
 </div>
 
-<div id="scramble"></div>
-
-<svg id="filters">
+<svg id="filters" style="position:absolute;width:0;height:0;">
   <defs>
     <filter id="threshold">
-      <feColorMatrix in="SourceGraphic"
-        type="matrix"
+      <feColorMatrix in="SourceGraphic" type="matrix"
         values="1 0 0 0 0
                 0 1 0 0 0
                 0 0 1 0 0
@@ -136,7 +137,8 @@
 const elts = {
   text1: document.getElementById("text1"),
   text2: document.getElementById("text2"),
-  container: document.getElementById("container"),
+  asciiBg: document.getElementById("ascii-bg"),
+  particles: document.getElementById("particles"),
   scramble: document.getElementById("scramble")
 };
 
@@ -160,38 +162,105 @@ const texts = [
   "cole", "@", "tilair.com"
 ];
 
-const asciiChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const ascii = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-const morphTime = 1.2;
-const cooldownTime = 0.8;
+// SPEED - faster morph
+const morphTime = 0.5;
+const cooldownTime = 0.4;
 
 let textIndex = texts.length - 1;
 let time = new Date();
 let morph = 0;
 let cooldown = cooldownTime;
 
+// Initialize
 elts.text1.textContent = texts[textIndex % texts.length];
 elts.text2.textContent = texts[(textIndex + 1) % texts.length];
 
-function randChar() {
-  return asciiChars[Math.floor(Math.random() * asciiChars.length)];
+// Generate full screen ASCII background
+function generateAsciiBg() {
+  const cols = Math.ceil(window.innerWidth / 10);
+  const rows = Math.ceil(window.innerHeight / 16);
+  let str = '';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      str += ascii[Math.floor(Math.random() * ascii.length)];
+    }
+    str += '\n';
+  }
+  elts.asciiBg.textContent = str;
 }
 
+// Create floating particles
+const particleCount = 50;
+const particleEls = [];
+
+function createParticles() {
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = ascii[Math.floor(Math.random() * ascii.length)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.top = Math.random() * 100 + 'vh';
+    p.style.animationDelay = Math.random() * 2 + 's';
+    p.style.fontSize = (16 + Math.random() * 24) + 'px';
+    elts.particles.appendChild(p);
+    particleEls.push(p);
+  }
+}
+
+function randChar() {
+  return ascii[Math.floor(Math.random() * ascii.length)];
+}
+
+// Update ASCII background - scramble effect
+let bgUpdateCounter = 0;
+function updateAsciiBg(intensity) {
+  bgUpdateCounter++;
+  if (bgUpdateCounter % 2 !== 0) return; // throttle
+
+  if (intensity > 0.1) {
+    elts.asciiBg.classList.add('active');
+    const cols = Math.ceil(window.innerWidth / 10);
+    const rows = Math.ceil(window.innerHeight / 16);
+    let str = '';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        str += randChar();
+      }
+      str += '\n';
+    }
+    elts.asciiBg.textContent = str;
+  } else {
+    elts.asciiBg.classList.remove('active');
+  }
+}
+
+// Update particles
+function updateParticles(intensity) {
+  const activeCount = Math.floor(intensity * particleCount);
+  particleEls.forEach((p, i) => {
+    if (i < activeCount) {
+      p.classList.add('active');
+      p.textContent = randChar();
+    } else {
+      p.classList.remove('active');
+    }
+  });
+}
+
+// Update center scramble
 function updateScramble(text, intensity) {
-  if (intensity < 0.1) {
-    elts.scramble.classList.remove('active');
-    elts.scramble.innerHTML = '';
+  if (intensity < 0.05) {
+    elts.scramble.textContent = '';
     return;
   }
 
-  elts.scramble.classList.add('active');
-
-  let html = '';
+  let result = '';
   for (let i = 0; i < text.length; i++) {
-    const char = Math.random() < intensity ? randChar() : text[i];
-    html += `<span style="animation-delay: ${i * 20}ms">${char}</span>`;
+    result += Math.random() < intensity ? randChar() : text[i];
   }
-  elts.scramble.innerHTML = html;
+  elts.scramble.textContent = result;
 }
 
 function doMorph() {
@@ -212,23 +281,22 @@ function setMorph(fraction) {
   elts.text2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
   elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
-  const inverseFraction = 1 - fraction;
-  elts.text1.style.filter = `blur(${Math.min(8 / inverseFraction - 8, 100)}px)`;
-  elts.text1.style.opacity = `${Math.pow(inverseFraction, 0.4) * 100}%`;
+  const inv = 1 - fraction;
+  elts.text1.style.filter = `blur(${Math.min(8 / inv - 8, 100)}px)`;
+  elts.text1.style.opacity = `${Math.pow(inv, 0.4) * 100}%`;
 
   elts.text1.textContent = texts[textIndex % texts.length];
   elts.text2.textContent = texts[(textIndex + 1) % texts.length];
 
-  // Update glow text
-  const currentText = fraction > 0.5 ? texts[(textIndex + 1) % texts.length] : texts[textIndex % texts.length];
-  elts.container.setAttribute('data-text', currentText);
+  // Effects intensity peaks at middle
+  const intensity = Math.sin(fraction * Math.PI);
+  updateAsciiBg(intensity);
+  updateParticles(intensity);
 
-  // Scramble effect peaks in the middle of the morph
-  const scrambleIntensity = Math.sin(fraction * Math.PI) * 0.7;
   const longerText = texts[textIndex % texts.length].length > texts[(textIndex + 1) % texts.length].length
     ? texts[textIndex % texts.length]
     : texts[(textIndex + 1) % texts.length];
-  updateScramble(longerText, scrambleIntensity);
+  updateScramble(longerText, intensity * 0.8);
 }
 
 function doCooldown() {
@@ -236,11 +304,11 @@ function doCooldown() {
 
   elts.text2.style.filter = "";
   elts.text2.style.opacity = "100%";
-
   elts.text1.style.filter = "";
   elts.text1.style.opacity = "0%";
 
-  elts.container.setAttribute('data-text', texts[(textIndex + 1) % texts.length]);
+  updateAsciiBg(0);
+  updateParticles(0);
   updateScramble('', 0);
 }
 
@@ -263,6 +331,11 @@ function animate() {
     doCooldown();
   }
 }
+
+// Initialize
+generateAsciiBg();
+createParticles();
+window.addEventListener('resize', generateAsciiBg);
 
 animate();
 </script>
