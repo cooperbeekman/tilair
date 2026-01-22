@@ -13,7 +13,7 @@
   body {
     margin: 0;
     padding: 0;
-    background: #0a0a0a;
+    background: #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -21,40 +21,10 @@
     overflow: hidden;
   }
 
-  /* CRT scanline effect */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.15) 0px,
-      rgba(0, 0, 0, 0.15) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  /* Subtle CRT glow */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 0%,
-      rgba(0, 0, 0, 0.3) 100%
-    );
-    pointer-events: none;
-    z-index: 5;
-  }
-
-  .terminal {
+  .container {
     position: relative;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     padding: 20px;
     display: flex;
     align-items: center;
@@ -63,235 +33,333 @@
   }
 
   .text-display {
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', 'Courier New', monospace;
-    font-size: 72px;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    color: #e0e0e0;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 80px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
     text-align: center;
-    text-shadow:
-      0 0 10px rgba(255, 255, 255, 0.3),
-      0 0 20px rgba(255, 255, 255, 0.1);
-    white-space: nowrap;
+    position: relative;
   }
 
-  .text-display .char {
+  .char {
     display: inline-block;
-    min-width: 0.6em;
-    transition: color 0.1s ease;
+    position: relative;
+    min-width: 0.55em;
+    transition: transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  .text-display .char.scrambling {
-    color: #606060;
+  .char.morphing {
+    animation: glitch 0.08s infinite;
   }
 
-  .text-display .char.locked {
-    color: #e0e0e0;
+  .char.settling {
+    animation: settle 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
-  /* Blinking cursor */
-  .cursor {
-    display: inline-block;
-    width: 0.6em;
-    height: 1.1em;
-    background: #e0e0e0;
-    margin-left: 4px;
-    vertical-align: text-bottom;
-    animation: blink 1s step-end infinite;
+  @keyframes glitch {
+    0% { transform: translateY(0) scaleY(1); opacity: 0.9; }
+    25% { transform: translateY(-2px) scaleY(1.1); opacity: 0.7; }
+    50% { transform: translateY(1px) scaleY(0.95); opacity: 0.85; }
+    75% { transform: translateY(-1px) scaleY(1.05); opacity: 0.75; }
+    100% { transform: translateY(0) scaleY(1); opacity: 0.9; }
   }
 
-  @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+  @keyframes settle {
+    0% { transform: translateY(-3px) scaleY(1.15); filter: blur(2px); }
+    50% { transform: translateY(2px) scaleY(0.95); }
+    100% { transform: translateY(0) scaleY(1); filter: blur(0); }
   }
 
-  @media (max-width: 768px) {
-    .text-display {
-      font-size: 36px;
-    }
+  /* Glow layers */
+  .glow-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
-  @media (max-width: 480px) {
-    .text-display {
-      font-size: 24px;
-    }
+  .text-display::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #0ff;
+    opacity: 0;
+    filter: blur(8px);
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+
+  .text-display::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #f0f;
+    opacity: 0;
+    filter: blur(12px);
+    animation: glowPulse 2s ease-in-out infinite 0.5s;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0; transform: translateX(0); }
+    50% { opacity: 0.15; transform: translateX(2px); }
+  }
+
+  /* Wave effect on settled characters */
+  .char.settled {
+    animation: wave 3s ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+
+  @keyframes wave {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* Scanline */
+  .scanline {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to bottom,
+      transparent,
+      rgba(255, 255, 255, 0.03),
+      transparent
+    );
+    animation: scanMove 4s linear infinite;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  @keyframes scanMove {
+    0% { top: -4px; }
+    100% { top: 100vh; }
+  }
+
+  /* Noise overlay */
+  .noise {
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  @media (max-width: 900px) {
+    .text-display { font-size: 48px; }
+  }
+
+  @media (max-width: 500px) {
+    .text-display { font-size: 28px; }
   }
 </style>
 </head>
 
 <body>
 
-<div class="terminal">
-  <div class="text-display" id="display"></div>
+<div class="scanline"></div>
+<div class="noise"></div>
+
+<div class="container">
+  <div class="text-display" id="display" data-text=""></div>
 </div>
 
 <script>
   const display = document.getElementById('display');
 
   const words = [
-    "...", "..", ".",
+    "...",
+    "..",
+    ".",
     "Tilair",
     "Is",
     "A",
     "Holding Company",
+    "And",
     "Venture Studio",
+    "Based In",
     "Puerto Rico",
+    "We Build",
     "Crypto",
     "AI",
     "Defense Tech",
+    "And More",
+    "Get In Touch",
     "cole@tilair.com"
   ];
 
-  // ASCII characters for scramble effect
-  const scrambleChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~0123456789';
+  // Characters for morphing - ordered by visual similarity for smoother transitions
+  const morphChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?+=~<>';
 
-  // Timing parameters
-  const cycleSpeed = 30;      // How fast random chars cycle (ms)
-  const decodeSpeed = 50;     // Time between each char locking (ms)
-  const holdTime = 1000;      // How long to display decoded word (ms)
-  const scrambleOutSpeed = 40; // Speed of scramble out effect (ms)
+  // Character similarity map for smoother morphing
+  const similarChars = {
+    'A': '4AHVNM', 'B': '8BERPD', 'C': 'CGOQUS', 'D': 'DOPQB0', 'E': '3EFHL',
+    'F': 'EFPTL', 'G': '6GCQO9', 'H': '#HMNKA', 'I': '1ILTJ!', 'J': 'JITL1',
+    'K': 'KXHNY', 'L': '1LITJ', 'M': 'MWNHK', 'N': 'NMHKZ', 'O': '0OQCDG',
+    'P': 'PRBFD', 'Q': 'QOGCD9', 'R': 'RBPEK', 'S': '5S$Z2', 'T': '7TYL+',
+    'U': 'UVWJC', 'V': 'VUWYA', 'W': 'WMVUN', 'X': 'XK*ZY', 'Y': 'YTVX7',
+    'Z': '2ZNS7', 'a': '@aoec', 'b': 'bdpq6', 'c': 'coaes', 'd': 'dbpq',
+    'e': 'eoca3', 'f': 'ftrl', 'g': 'gqp9y', 'h': 'hnbk', 'i': '!i1lj',
+    'j': 'ji1l', 'k': 'kxh', 'l': '1lij|', 'm': 'mwn', 'n': 'nmhr',
+    'o': '0oecd', 'p': 'pqdb', 'q': 'qpgd9', 'r': 'rnf', 's': '$sz5',
+    't': '+tfl7', 'u': 'uvwn', 'v': 'vwuy', 'w': 'wmvu', 'x': 'x*kz',
+    'y': 'yvg7', 'z': 'z2s7', ' ': ' _-', '.': '.,:', '@': '@a0oQ',
+    '0': '0OQD', '1': '1lIi!', '2': '2Zs', '3': '3E8B', '4': '4AH',
+    '5': '5Ss$', '6': '6Gb9', '7': '7TYL', '8': '8B3&', '9': '9Gq6'
+  };
 
   let currentWordIndex = 0;
   let isAnimating = false;
 
   function getRandomChar() {
-    return scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+    return morphChars[Math.floor(Math.random() * morphChars.length)];
   }
 
-  function createCharSpans(word) {
+  function getMorphChar(targetChar) {
+    const similar = similarChars[targetChar] || morphChars;
+    return similar[Math.floor(Math.random() * similar.length)];
+  }
+
+  function createCharElements(text) {
     display.innerHTML = '';
+    display.setAttribute('data-text', text);
     const chars = [];
 
-    for (let i = 0; i < word.length; i++) {
+    for (let i = 0; i < text.length; i++) {
       const span = document.createElement('span');
-      span.className = 'char scrambling';
+      span.className = 'char';
       span.textContent = getRandomChar();
-      span.dataset.target = word[i];
-      span.dataset.locked = 'false';
+      span.dataset.target = text[i];
+      span.dataset.index = i;
+      span.style.setProperty('--delay', `${i * 0.1}s`);
       display.appendChild(span);
       chars.push(span);
     }
 
-    // Add cursor
-    const cursor = document.createElement('span');
-    cursor.className = 'cursor';
-    display.appendChild(cursor);
-
     return chars;
   }
 
-  function cycleRandomChars(chars) {
-    chars.forEach(span => {
-      if (span.dataset.locked === 'false') {
-        span.textContent = getRandomChar();
-      }
-    });
-  }
+  async function morphWord(text) {
+    const chars = createCharElements(text);
+    const morphSteps = 12; // More steps = smoother morph
+    const stepDelay = 35;
+    const staggerDelay = 25;
 
-  function decodeWord(word) {
-    return new Promise(resolve => {
-      const chars = createCharSpans(word);
+    // Start all chars morphing
+    chars.forEach(c => c.classList.add('morphing'));
 
-      // Start cycling random characters
-      const cycleInterval = setInterval(() => {
-        cycleRandomChars(chars);
-      }, cycleSpeed);
+    // Morph each character through similar characters toward target
+    for (let step = 0; step < morphSteps; step++) {
+      await new Promise(r => setTimeout(r, stepDelay));
 
-      // Generate random order for locking characters
-      const indices = [...Array(chars.length).keys()];
-      for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [indices[i], indices[j]] = [indices[j], indices[i]];
-      }
+      chars.forEach((span, i) => {
+        setTimeout(() => {
+          const target = span.dataset.target;
+          const progress = step / morphSteps;
 
-      // Lock characters one by one
-      let lockIndex = 0;
-      const lockInterval = setInterval(() => {
-        if (lockIndex >= indices.length) {
-          clearInterval(lockInterval);
-          clearInterval(cycleInterval);
-          resolve();
-          return;
-        }
-
-        const charIndex = indices[lockIndex];
-        const span = chars[charIndex];
-        span.textContent = span.dataset.target;
-        span.dataset.locked = 'true';
-        span.classList.remove('scrambling');
-        span.classList.add('locked');
-        lockIndex++;
-      }, decodeSpeed);
-    });
-  }
-
-  function scrambleOut() {
-    return new Promise(resolve => {
-      const chars = Array.from(display.querySelectorAll('.char'));
-
-      // Generate random order for unlocking
-      const indices = [...Array(chars.length).keys()];
-      for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [indices[i], indices[j]] = [indices[j], indices[i]];
-      }
-
-      // Start cycling for unlocked chars
-      const cycleInterval = setInterval(() => {
-        chars.forEach(span => {
-          if (span.dataset.locked === 'false') {
+          // As we get closer to the end, more likely to show target
+          if (Math.random() < progress * progress) {
+            span.textContent = target;
+          } else if (Math.random() < progress) {
+            span.textContent = getMorphChar(target);
+          } else {
             span.textContent = getRandomChar();
           }
-        });
-      }, cycleSpeed);
+        }, i * staggerDelay * (1 - step / morphSteps));
+      });
+    }
 
-      // Unlock characters one by one
-      let unlockIndex = 0;
-      const unlockInterval = setInterval(() => {
-        if (unlockIndex >= indices.length) {
-          clearInterval(unlockInterval);
-          clearInterval(cycleInterval);
-          resolve();
-          return;
-        }
+    // Final lock-in with settle animation
+    await new Promise(r => setTimeout(r, 50));
 
-        const charIndex = indices[unlockIndex];
-        const span = chars[charIndex];
-        span.dataset.locked = 'false';
-        span.classList.remove('locked');
-        span.classList.add('scrambling');
-        span.textContent = getRandomChar();
-        unlockIndex++;
-      }, scrambleOutSpeed);
+    chars.forEach((span, i) => {
+      setTimeout(() => {
+        span.textContent = span.dataset.target;
+        span.classList.remove('morphing');
+        span.classList.add('settling');
+
+        setTimeout(() => {
+          span.classList.remove('settling');
+          span.classList.add('settled');
+        }, 300);
+      }, i * 20);
     });
+
+    // Wait for all to settle
+    await new Promise(r => setTimeout(r, chars.length * 20 + 300));
   }
 
-  async function animateWord(word) {
+  async function morphOut(text) {
+    const chars = Array.from(display.querySelectorAll('.char'));
+    const morphSteps = 8;
+    const stepDelay = 30;
+
+    // Remove settled wave animation
+    chars.forEach(c => {
+      c.classList.remove('settled');
+      c.classList.add('morphing');
+    });
+
+    // Morph away from target
+    for (let step = 0; step < morphSteps; step++) {
+      await new Promise(r => setTimeout(r, stepDelay));
+
+      const progress = step / morphSteps;
+
+      chars.forEach((span, i) => {
+        setTimeout(() => {
+          const target = span.dataset.target;
+          if (Math.random() < progress) {
+            span.textContent = getRandomChar();
+          } else {
+            span.textContent = getMorphChar(target);
+          }
+        }, i * 15);
+      });
+    }
+
+    await new Promise(r => setTimeout(r, 100));
+  }
+
+  async function animateWord(text, holdTime) {
     isAnimating = true;
 
-    // Decode the word
-    await decodeWord(word);
-
-    // Hold the decoded word
+    await morphWord(text);
     await new Promise(r => setTimeout(r, holdTime));
-
-    // Scramble out
-    await scrambleOut();
-
-    // Small pause before next word
-    await new Promise(r => setTimeout(r, 100));
+    await morphOut(text);
 
     isAnimating = false;
   }
 
   async function run() {
+    // Initial delay
+    await new Promise(r => setTimeout(r, 500));
+
     while (true) {
-      await animateWord(words[currentWordIndex]);
+      const word = words[currentWordIndex];
+
+      // Vary hold time based on word importance
+      let holdTime = 800;
+      if (word === 'Tilair') holdTime = 1500;
+      else if (word === 'cole@tilair.com') holdTime = 2000;
+      else if (word.length <= 2) holdTime = 400;
+      else if (word.includes(' ')) holdTime = 1200;
+
+      await animateWord(word, holdTime);
+      await new Promise(r => setTimeout(r, 80));
+
       currentWordIndex = (currentWordIndex + 1) % words.length;
     }
   }
 
-  // Start the animation
   run();
 </script>
 
