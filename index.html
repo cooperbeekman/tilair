@@ -5,152 +5,142 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tilair</title>
 
+<link href="https://fonts.googleapis.com/css?family=Raleway:900&display=swap" rel="stylesheet">
+
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     height: 100vh;
     overflow: hidden;
   }
 
-  .display {
-    font-family: 'Courier New', 'Monaco', monospace;
-    font-size: clamp(28px, 8vw, 72px);
-    font-weight: bold;
-    color: #0f0;
-    text-align: center;
-    text-shadow:
-      0 0 5px #0f0,
-      0 0 10px #0f0,
-      0 0 20px #0f0,
-      0 0 40px #0a0;
-    letter-spacing: 0.1em;
-    position: relative;
-    perspective: 1000px;
-    padding: 20px;
+  #container {
+    position: absolute;
+    margin: auto;
+    width: 100vw;
+    height: 120pt;
+    top: 0;
+    bottom: 0;
+    filter: url(#threshold) blur(0.6px);
   }
 
-  .char {
+  #text1, #text2 {
+    position: absolute;
+    width: 100%;
     display: inline-block;
-    position: relative;
-    min-width: 0.6em;
-    transform-style: preserve-3d;
-    animation: none;
+    font-family: 'Raleway', sans-serif;
+    font-size: clamp(40pt, 10vw, 90pt);
+    text-align: center;
+    user-select: none;
+    color: #fff;
   }
 
-  .char.morphing {
-    animation: morph3d 0.1s ease-in-out infinite;
-  }
-
-  .char.revealing {
-    animation: reveal3d 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  }
-
-  .char.idle {
-    animation: float 2s ease-in-out infinite;
-    animation-delay: var(--d);
-  }
-
-  .char.exiting {
-    animation: exit3d 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
-  }
-
-  @keyframes morph3d {
-    0%, 100% {
-      transform: rotateY(0deg) rotateX(0deg) scale(1);
-      opacity: 0.6;
-    }
-    25% {
-      transform: rotateY(15deg) rotateX(-10deg) scale(1.1);
-      opacity: 0.8;
-    }
-    50% {
-      transform: rotateY(-10deg) rotateX(15deg) scale(0.9);
-      opacity: 0.5;
-    }
-    75% {
-      transform: rotateY(10deg) rotateX(-5deg) scale(1.05);
-      opacity: 0.7;
-    }
-  }
-
-  @keyframes reveal3d {
-    0% {
-      transform: rotateY(90deg) rotateX(20deg) scale(0.5);
-      opacity: 0;
-      filter: blur(4px);
-    }
-    50% {
-      transform: rotateY(-20deg) rotateX(-10deg) scale(1.2);
-      opacity: 1;
-      filter: blur(0);
-    }
-    100% {
-      transform: rotateY(0deg) rotateX(0deg) scale(1);
-      opacity: 1;
-      filter: blur(0);
-    }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0) rotateY(0deg); }
-    50% { transform: translateY(-3px) rotateY(5deg); }
-  }
-
-  @keyframes exit3d {
-    0% {
-      transform: rotateY(0deg) scale(1);
-      opacity: 1;
-    }
-    100% {
-      transform: rotateY(-90deg) scale(0.3);
-      opacity: 0;
-      filter: blur(4px);
-    }
+  /* Glow effect */
+  #container::after {
+    content: attr(data-text);
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    font-family: 'Raleway', sans-serif;
+    font-size: clamp(40pt, 10vw, 90pt);
+    text-align: center;
+    color: transparent;
+    text-shadow:
+      0 0 30px rgba(255,255,255,0.3),
+      0 0 60px rgba(255,255,255,0.1);
+    pointer-events: none;
+    filter: blur(8px);
+    opacity: 0.5;
   }
 
   /* Scanlines */
-  body::after {
+  body::before {
     content: '';
     position: fixed;
     inset: 0;
     background: repeating-linear-gradient(
       0deg,
-      rgba(0, 0, 0, 0.1) 0px,
-      rgba(0, 0, 0, 0.1) 1px,
+      rgba(0, 0, 0, 0.03) 0px,
+      rgba(0, 0, 0, 0.03) 1px,
       transparent 1px,
-      transparent 3px
+      transparent 2px
     );
     pointer-events: none;
-    z-index: 10;
+    z-index: 100;
   }
 
-  /* CRT flicker */
-  @keyframes flicker {
-    0%, 100% { opacity: 1; }
-    92% { opacity: 1; }
-    93% { opacity: 0.8; }
-    94% { opacity: 1; }
+  /* Scramble text overlay */
+  #scramble {
+    position: absolute;
+    width: 100%;
+    height: 120pt;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Courier New', monospace;
+    font-size: clamp(40pt, 10vw, 90pt);
+    font-weight: bold;
+    text-align: center;
+    color: rgba(255,255,255,0.15);
+    pointer-events: none;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .display {
-    animation: flicker 4s infinite;
+  #scramble span {
+    display: inline-block;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  #scramble.active span {
+    opacity: 1;
+    animation: scrambleChar 0.1s steps(1) infinite;
+  }
+
+  @keyframes scrambleChar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
   }
 </style>
 </head>
 
 <body>
 
-<div class="display" id="display"></div>
+<div id="container" data-text="">
+  <span id="text1"></span>
+  <span id="text2"></span>
+</div>
+
+<div id="scramble"></div>
+
+<svg id="filters">
+  <defs>
+    <filter id="threshold">
+      <feColorMatrix in="SourceGraphic"
+        type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 255 -140" />
+    </filter>
+  </defs>
+</svg>
 
 <script>
-const display = document.getElementById('display');
+const elts = {
+  text1: document.getElementById("text1"),
+  text2: document.getElementById("text2"),
+  container: document.getElementById("container"),
+  scramble: document.getElementById("scramble")
+};
 
-const words = [
+const texts = [
   "...", "..", ".",
   "Tilair",
   "Is", "A",
@@ -170,116 +160,111 @@ const words = [
   "cole", "@", "tilair.com"
 ];
 
-// ASCII density characters for morphing (sparse to dense)
-const asciiDensity = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$';
+const asciiChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-let idx = 0;
+const morphTime = 1.2;
+const cooldownTime = 0.8;
 
-function randAscii() {
-  return asciiDensity[Math.floor(Math.random() * asciiDensity.length)];
+let textIndex = texts.length - 1;
+let time = new Date();
+let morph = 0;
+let cooldown = cooldownTime;
+
+elts.text1.textContent = texts[textIndex % texts.length];
+elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+
+function randChar() {
+  return asciiChars[Math.floor(Math.random() * asciiChars.length)];
 }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function updateScramble(text, intensity) {
+  if (intensity < 0.1) {
+    elts.scramble.classList.remove('active');
+    elts.scramble.innerHTML = '';
+    return;
+  }
 
-function createChars(text) {
-  display.innerHTML = '';
-  const chars = [];
+  elts.scramble.classList.add('active');
 
+  let html = '';
   for (let i = 0; i < text.length; i++) {
-    const span = document.createElement('span');
-    span.className = 'char';
-    span.textContent = randAscii();
-    span.dataset.target = text[i];
-    span.style.setProperty('--d', `${i * 0.15}s`);
-    display.appendChild(span);
-    chars.push(span);
+    const char = Math.random() < intensity ? randChar() : text[i];
+    html += `<span style="animation-delay: ${i * 20}ms">${char}</span>`;
   }
-
-  return chars;
+  elts.scramble.innerHTML = html;
 }
 
-async function animateIn(text) {
-  const chars = createChars(text);
+function doMorph() {
+  morph -= cooldown;
+  cooldown = 0;
 
-  // Start all morphing with random ASCII cycling
-  chars.forEach(c => c.classList.add('morphing'));
+  let fraction = morph / morphTime;
 
-  // Rapid ASCII cycling phase
-  const morphDuration = 300 + text.length * 20;
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < morphDuration) {
-    chars.forEach(c => {
-      if (c.classList.contains('morphing')) {
-        c.textContent = randAscii();
-      }
-    });
-    await sleep(40);
+  if (fraction > 1) {
+    cooldown = cooldownTime;
+    fraction = 1;
   }
 
-  // Reveal characters with 3D flip - staggered
-  for (let i = 0; i < chars.length; i++) {
-    const char = chars[i];
-    char.classList.remove('morphing');
-    char.textContent = char.dataset.target;
-    char.classList.add('revealing');
-
-    await sleep(50);
-  }
-
-  // Wait for last animation to complete
-  await sleep(350);
-
-  // Switch to idle floating
-  chars.forEach(c => {
-    c.classList.remove('revealing');
-    c.classList.add('idle');
-  });
+  setMorph(fraction);
 }
 
-async function animateOut() {
-  const chars = Array.from(display.querySelectorAll('.char'));
+function setMorph(fraction) {
+  elts.text2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`;
+  elts.text2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`;
 
-  // Exit with 3D rotation - staggered from center out
-  const mid = Math.floor(chars.length / 2);
-  const order = chars.map((c, i) => ({ char: c, dist: Math.abs(i - mid) }))
-    .sort((a, b) => a.dist - b.dist);
+  const inverseFraction = 1 - fraction;
+  elts.text1.style.filter = `blur(${Math.min(8 / inverseFraction - 8, 100)}px)`;
+  elts.text1.style.opacity = `${Math.pow(inverseFraction, 0.4) * 100}%`;
 
-  for (const { char } of order) {
-    char.classList.remove('idle');
-    char.classList.add('exiting');
-    await sleep(25);
-  }
+  elts.text1.textContent = texts[textIndex % texts.length];
+  elts.text2.textContent = texts[(textIndex + 1) % texts.length];
 
-  await sleep(250);
+  // Update glow text
+  const currentText = fraction > 0.5 ? texts[(textIndex + 1) % texts.length] : texts[textIndex % texts.length];
+  elts.container.setAttribute('data-text', currentText);
+
+  // Scramble effect peaks in the middle of the morph
+  const scrambleIntensity = Math.sin(fraction * Math.PI) * 0.7;
+  const longerText = texts[textIndex % texts.length].length > texts[(textIndex + 1) % texts.length].length
+    ? texts[textIndex % texts.length]
+    : texts[(textIndex + 1) % texts.length];
+  updateScramble(longerText, scrambleIntensity);
 }
 
-async function show(text) {
-  await animateIn(text);
+function doCooldown() {
+  morph = 0;
 
-  // Hold time
-  let hold = 400;
-  if (text === 'Tilair') hold = 700;
-  else if (text === 'tilair.com') hold = 900;
-  else if (text.includes(' ')) hold = 600;
-  else if (text.length <= 2) hold = 250;
+  elts.text2.style.filter = "";
+  elts.text2.style.opacity = "100%";
 
-  await sleep(hold);
-  await animateOut();
-  await sleep(80);
+  elts.text1.style.filter = "";
+  elts.text1.style.opacity = "0%";
+
+  elts.container.setAttribute('data-text', texts[(textIndex + 1) % texts.length]);
+  updateScramble('', 0);
 }
 
-async function run() {
-  await sleep(300);
-  while (true) {
-    await show(words[idx]);
-    idx = (idx + 1) % words.length;
+function animate() {
+  requestAnimationFrame(animate);
+
+  let newTime = new Date();
+  let shouldIncrementIndex = cooldown > 0;
+  let dt = (newTime - time) / 1000;
+  time = newTime;
+
+  cooldown -= dt;
+
+  if (cooldown <= 0) {
+    if (shouldIncrementIndex) {
+      textIndex++;
+    }
+    doMorph();
+  } else {
+    doCooldown();
   }
 }
 
-run();
+animate();
 </script>
 
 </body>
