@@ -17,175 +17,138 @@
     overflow: hidden;
   }
 
-  .container {
-    position: relative;
-    width: 100%;
-    text-align: center;
-    padding: 20px;
-  }
-
   .display {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-    font-size: clamp(36px, 12vw, 120px);
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.02em;
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-size: clamp(28px, 8vw, 72px);
+    font-weight: bold;
+    color: #0f0;
+    text-align: center;
+    text-shadow:
+      0 0 5px #0f0,
+      0 0 10px #0f0,
+      0 0 20px #0f0,
+      0 0 40px #0a0;
+    letter-spacing: 0.1em;
     position: relative;
-    display: inline-block;
+    perspective: 1000px;
+    padding: 20px;
   }
 
   .char {
     display: inline-block;
     position: relative;
-    opacity: 0;
-    transform: translateY(20px) scale(0.8);
-    transition: none;
+    min-width: 0.6em;
+    transform-style: preserve-3d;
+    animation: none;
   }
 
-  .char.enter {
-    animation: charEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .char.morphing {
+    animation: morph3d 0.1s ease-in-out infinite;
   }
 
-  .char.scramble {
-    animation: scramble 0.06s steps(1) infinite;
+  .char.revealing {
+    animation: reveal3d 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
   }
 
-  .char.exit {
-    animation: charExit 0.15s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  .char.idle {
+    animation: float 2s ease-in-out infinite;
+    animation-delay: var(--d);
   }
 
-  @keyframes charEnter {
-    0% {
-      opacity: 0;
-      transform: translateY(30px) scale(0.7) rotateX(40deg);
-      filter: blur(10px);
+  .char.exiting {
+    animation: exit3d 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+  }
+
+  @keyframes morph3d {
+    0%, 100% {
+      transform: rotateY(0deg) rotateX(0deg) scale(1);
+      opacity: 0.6;
     }
-    60% {
+    25% {
+      transform: rotateY(15deg) rotateX(-10deg) scale(1.1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: rotateY(-10deg) rotateX(15deg) scale(0.9);
+      opacity: 0.5;
+    }
+    75% {
+      transform: rotateY(10deg) rotateX(-5deg) scale(1.05);
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes reveal3d {
+    0% {
+      transform: rotateY(90deg) rotateX(20deg) scale(0.5);
+      opacity: 0;
+      filter: blur(4px);
+    }
+    50% {
+      transform: rotateY(-20deg) rotateX(-10deg) scale(1.2);
       opacity: 1;
-      transform: translateY(-5px) scale(1.05);
       filter: blur(0);
     }
     100% {
+      transform: rotateY(0deg) rotateX(0deg) scale(1);
       opacity: 1;
-      transform: translateY(0) scale(1) rotateX(0deg);
       filter: blur(0);
     }
   }
 
-  @keyframes charExit {
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotateY(0deg); }
+    50% { transform: translateY(-3px) rotateY(5deg); }
+  }
+
+  @keyframes exit3d {
     0% {
+      transform: rotateY(0deg) scale(1);
       opacity: 1;
-      transform: translateY(0) scale(1);
-      filter: blur(0);
     }
     100% {
+      transform: rotateY(-90deg) scale(0.3);
       opacity: 0;
-      transform: translateY(-40px) scale(0.6);
-      filter: blur(8px);
+      filter: blur(4px);
     }
   }
 
-  @keyframes scramble {
-    0% { opacity: 0.4; }
-    50% { opacity: 0.7; }
-    100% { opacity: 0.4; }
-  }
-
-  /* Glitch layers */
-  .glitch-r, .glitch-b {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    opacity: 0;
-  }
-
-  .display.glitching .glitch-r {
-    animation: glitchR 0.2s steps(2) infinite;
-    color: #f0f;
-    opacity: 0.8;
-  }
-
-  .display.glitching .glitch-b {
-    animation: glitchB 0.2s steps(2) infinite;
-    color: #0ff;
-    opacity: 0.8;
-  }
-
-  @keyframes glitchR {
-    0% { transform: translate(-2px, 0); clip-path: inset(20% 0 60% 0); }
-    25% { transform: translate(2px, 0); clip-path: inset(60% 0 10% 0); }
-    50% { transform: translate(-1px, 0); clip-path: inset(40% 0 30% 0); }
-    75% { transform: translate(1px, 0); clip-path: inset(10% 0 70% 0); }
-    100% { transform: translate(-2px, 0); clip-path: inset(50% 0 20% 0); }
-  }
-
-  @keyframes glitchB {
-    0% { transform: translate(2px, 0); clip-path: inset(60% 0 10% 0); }
-    25% { transform: translate(-2px, 0); clip-path: inset(10% 0 70% 0); }
-    50% { transform: translate(1px, 0); clip-path: inset(30% 0 50% 0); }
-    75% { transform: translate(-1px, 0); clip-path: inset(70% 0 5% 0); }
-    100% { transform: translate(2px, 0); clip-path: inset(15% 0 60% 0); }
-  }
-
-  /* Accent line */
-  .line {
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    width: 0;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #fff, transparent);
-    transform: translateX(-50%);
-    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .display.active .line {
-    width: 100%;
-  }
-
-  /* Flash effect */
-  .flash {
+  /* Scanlines */
+  body::after {
+    content: '';
     position: fixed;
     inset: 0;
-    background: #fff;
-    opacity: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.1) 0px,
+      rgba(0, 0, 0, 0.1) 1px,
+      transparent 1px,
+      transparent 3px
+    );
     pointer-events: none;
-    z-index: 100;
+    z-index: 10;
   }
 
-  .flash.on {
-    animation: flash 0.1s ease-out;
+  /* CRT flicker */
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.8; }
+    94% { opacity: 1; }
   }
 
-  @keyframes flash {
-    0% { opacity: 0.3; }
-    100% { opacity: 0; }
+  .display {
+    animation: flicker 4s infinite;
   }
 </style>
 </head>
 
 <body>
 
-<div class="flash" id="flash"></div>
-
-<div class="container">
-  <div class="display" id="display">
-    <span class="glitch-r" id="glitchR"></span>
-    <span class="glitch-b" id="glitchB"></span>
-    <span class="content" id="content"></span>
-    <span class="line"></span>
-  </div>
-</div>
+<div class="display" id="display"></div>
 
 <script>
-const content = document.getElementById('content');
 const display = document.getElementById('display');
-const glitchR = document.getElementById('glitchR');
-const glitchB = document.getElementById('glitchB');
-const flash = document.getElementById('flash');
 
 const words = [
   "...", "..", ".",
@@ -207,97 +170,109 @@ const words = [
   "cole", "@", "tilair.com"
 ];
 
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&';
+// ASCII density characters for morphing (sparse to dense)
+const asciiDensity = ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$';
+
 let idx = 0;
 
-const rand = () => chars[Math.floor(Math.random() * chars.length)];
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+function randAscii() {
+  return asciiDensity[Math.floor(Math.random() * asciiDensity.length)];
+}
 
-async function animateIn(text) {
-  content.innerHTML = '';
-  glitchR.textContent = text;
-  glitchB.textContent = text;
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
 
-  const spans = [];
+function createChars(text) {
+  display.innerHTML = '';
+  const chars = [];
 
   for (let i = 0; i < text.length; i++) {
     const span = document.createElement('span');
-    span.className = 'char scramble';
-    span.textContent = rand();
+    span.className = 'char';
+    span.textContent = randAscii();
     span.dataset.target = text[i];
-    content.appendChild(span);
-    spans.push(span);
+    span.style.setProperty('--d', `${i * 0.15}s`);
+    display.appendChild(span);
+    chars.push(span);
   }
 
-  // Quick glitch burst
-  display.classList.add('glitching');
-  await sleep(80);
-  display.classList.remove('glitching');
+  return chars;
+}
 
-  // Rapid scramble then reveal
-  const scrambleTime = Math.min(text.length * 15, 150);
-  const scrambleEnd = Date.now() + scrambleTime;
+async function animateIn(text) {
+  const chars = createChars(text);
 
-  while (Date.now() < scrambleEnd) {
-    spans.forEach(s => { if (s.classList.contains('scramble')) s.textContent = rand(); });
-    await sleep(25);
+  // Start all morphing with random ASCII cycling
+  chars.forEach(c => c.classList.add('morphing'));
+
+  // Rapid ASCII cycling phase
+  const morphDuration = 300 + text.length * 20;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < morphDuration) {
+    chars.forEach(c => {
+      if (c.classList.contains('morphing')) {
+        c.textContent = randAscii();
+      }
+    });
+    await sleep(40);
   }
 
-  // Reveal characters rapidly
-  for (let i = 0; i < spans.length; i++) {
-    const span = spans[i];
-    span.classList.remove('scramble');
-    span.classList.add('enter');
-    span.textContent = span.dataset.target;
-    await sleep(text.length > 10 ? 20 : 30);
+  // Reveal characters with 3D flip - staggered
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+    char.classList.remove('morphing');
+    char.textContent = char.dataset.target;
+    char.classList.add('revealing');
+
+    await sleep(50);
   }
 
-  display.classList.add('active');
-  await sleep(50);
+  // Wait for last animation to complete
+  await sleep(350);
+
+  // Switch to idle floating
+  chars.forEach(c => {
+    c.classList.remove('revealing');
+    c.classList.add('idle');
+  });
 }
 
 async function animateOut() {
-  const spans = Array.from(content.querySelectorAll('.char'));
+  const chars = Array.from(display.querySelectorAll('.char'));
 
-  display.classList.remove('active');
+  // Exit with 3D rotation - staggered from center out
+  const mid = Math.floor(chars.length / 2);
+  const order = chars.map((c, i) => ({ char: c, dist: Math.abs(i - mid) }))
+    .sort((a, b) => a.dist - b.dist);
 
-  // Flash on exit
-  flash.classList.add('on');
-  setTimeout(() => flash.classList.remove('on'), 100);
+  for (const { char } of order) {
+    char.classList.remove('idle');
+    char.classList.add('exiting');
+    await sleep(25);
+  }
 
-  // Quick glitch
-  display.classList.add('glitching');
-  await sleep(50);
-  display.classList.remove('glitching');
-
-  // Exit all at once with tiny stagger
-  spans.forEach((span, i) => {
-    setTimeout(() => {
-      span.classList.remove('enter');
-      span.classList.add('exit');
-    }, i * 8);
-  });
-
-  await sleep(spans.length * 8 + 120);
+  await sleep(250);
 }
 
 async function show(text) {
   await animateIn(text);
 
-  // Dynamic hold time
-  let hold = 350;
-  if (text === 'Tilair') hold = 600;
-  else if (text === 'tilair.com') hold = 800;
-  else if (text.includes(' ')) hold = 500;
-  else if (text.length <= 2) hold = 200;
+  // Hold time
+  let hold = 400;
+  if (text === 'Tilair') hold = 700;
+  else if (text === 'tilair.com') hold = 900;
+  else if (text.includes(' ')) hold = 600;
+  else if (text.length <= 2) hold = 250;
 
   await sleep(hold);
   await animateOut();
-  await sleep(60);
+  await sleep(80);
 }
 
 async function run() {
-  await sleep(200);
+  await sleep(300);
   while (true) {
     await show(words[idx]);
     idx = (idx + 1) % words.length;
