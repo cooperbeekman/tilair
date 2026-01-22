@@ -8,11 +8,11 @@
 <style>
   * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
   body {
-    margin: 0;
-    padding: 0;
     background: #000;
     display: flex;
     align-items: center;
@@ -21,360 +21,211 @@
     overflow: hidden;
   }
 
-  .container {
-    position: relative;
-    width: 100%;
-    max-width: 1400px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-  }
-
-  .text-display {
-    font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-    font-size: 80px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+  .display {
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: clamp(32px, 10vw, 90px);
+    font-weight: 500;
     color: #fff;
     text-align: center;
+    letter-spacing: 0.02em;
     position: relative;
+    padding: 20px;
   }
 
   .char {
     display: inline-block;
     position: relative;
-    min-width: 0.55em;
-    transition: transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+    min-width: 0.6em;
+    vertical-align: top;
   }
 
-  .char.morphing {
-    animation: glitch 0.08s infinite;
+  .char-inner {
+    display: block;
+    transition: all 0.12s ease-out;
   }
 
-  .char.settling {
-    animation: settle 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  .char.morphing .char-inner {
+    filter: blur(6px);
+    opacity: 0.6;
+    transform: scaleY(1.3) scaleX(0.9);
   }
 
-  @keyframes glitch {
-    0% { transform: translateY(0) scaleY(1); opacity: 0.9; }
-    25% { transform: translateY(-2px) scaleY(1.1); opacity: 0.7; }
-    50% { transform: translateY(1px) scaleY(0.95); opacity: 0.85; }
-    75% { transform: translateY(-1px) scaleY(1.05); opacity: 0.75; }
-    100% { transform: translateY(0) scaleY(1); opacity: 0.9; }
+  .char.resolving .char-inner {
+    filter: blur(2px);
+    opacity: 0.85;
+    transform: scaleY(1.1);
   }
 
-  @keyframes settle {
-    0% { transform: translateY(-3px) scaleY(1.15); filter: blur(2px); }
-    50% { transform: translateY(2px) scaleY(0.95); }
-    100% { transform: translateY(0) scaleY(1); filter: blur(0); }
+  .char.resolved .char-inner {
+    filter: blur(0);
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
   }
 
-  /* Glow layers */
-  .glow-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+  /* Subtle glow on resolved text */
+  .char.resolved .char-inner {
+    text-shadow: 0 0 20px rgba(255,255,255,0.3);
   }
 
-  .text-display::before {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    color: #0ff;
-    opacity: 0;
+  /* Word exit animation */
+  .char.exiting .char-inner {
     filter: blur(8px);
-    animation: glowPulse 2s ease-in-out infinite;
-  }
-
-  .text-display::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    color: #f0f;
     opacity: 0;
-    filter: blur(12px);
-    animation: glowPulse 2s ease-in-out infinite 0.5s;
-  }
-
-  @keyframes glowPulse {
-    0%, 100% { opacity: 0; transform: translateX(0); }
-    50% { opacity: 0.15; transform: translateX(2px); }
-  }
-
-  /* Wave effect on settled characters */
-  .char.settled {
-    animation: wave 3s ease-in-out infinite;
-    animation-delay: var(--delay);
-  }
-
-  @keyframes wave {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
-
-  /* Scanline */
-  .scanline {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(to bottom,
-      transparent,
-      rgba(255, 255, 255, 0.03),
-      transparent
-    );
-    animation: scanMove 4s linear infinite;
-    pointer-events: none;
-    z-index: 100;
-  }
-
-  @keyframes scanMove {
-    0% { top: -4px; }
-    100% { top: 100vh; }
-  }
-
-  /* Noise overlay */
-  .noise {
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 50;
-  }
-
-  @media (max-width: 900px) {
-    .text-display { font-size: 48px; }
-  }
-
-  @media (max-width: 500px) {
-    .text-display { font-size: 28px; }
+    transform: scaleY(0.7) scaleX(1.2);
   }
 </style>
 </head>
 
 <body>
 
-<div class="scanline"></div>
-<div class="noise"></div>
-
-<div class="container">
-  <div class="text-display" id="display" data-text=""></div>
-</div>
+<div class="display" id="display"></div>
 
 <script>
-  const display = document.getElementById('display');
+const display = document.getElementById('display');
 
-  const words = [
-    "...",
-    "..",
-    ".",
-    "Tilair",
-    "Is",
-    "A",
-    "Holding",
-    "Company",
-    "/",
-    "Venture",
-    "Studio",
-    "Based",
-    "In",
-    "Puerto Rico 🇵🇷",
-    "That",
-    "Builds",
-    "and",
-    "Invests",
-    "In",
-    "Crypto",
-    "AI",
-    "Health Tech",
-    "Online Education",
-    "Defense Tech",
-    "For",
-    "All",
-    "Inquiries",
-    "Email",
-    "cole",
-    "@",
-    "tilair.com"
-  ];
+const words = [
+  "...",
+  "..",
+  ".",
+  "Tilair",
+  "Is",
+  "A",
+  "Holding",
+  "Company",
+  "/",
+  "Venture",
+  "Studio",
+  "Based",
+  "In",
+  "Puerto Rico 🇵🇷",
+  "That",
+  "Builds",
+  "and",
+  "Invests",
+  "In",
+  "Crypto",
+  "AI",
+  "Health Tech",
+  "Online Education",
+  "Defense Tech",
+  "For",
+  "All",
+  "Inquiries",
+  "Email",
+  "cole",
+  "@",
+  "tilair.com"
+];
 
-  // Characters for morphing - ordered by visual similarity for smoother transitions
-  const morphChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?+=~<>';
+const morphChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-  // Character similarity map for smoother morphing
-  const similarChars = {
-    'A': '4AHVNM', 'B': '8BERPD', 'C': 'CGOQUS', 'D': 'DOPQB0', 'E': '3EFHL',
-    'F': 'EFPTL', 'G': '6GCQO9', 'H': '#HMNKA', 'I': '1ILTJ!', 'J': 'JITL1',
-    'K': 'KXHNY', 'L': '1LITJ', 'M': 'MWNHK', 'N': 'NMHKZ', 'O': '0OQCDG',
-    'P': 'PRBFD', 'Q': 'QOGCD9', 'R': 'RBPEK', 'S': '5S$Z2', 'T': '7TYL+',
-    'U': 'UVWJC', 'V': 'VUWYA', 'W': 'WMVUN', 'X': 'XK*ZY', 'Y': 'YTVX7',
-    'Z': '2ZNS7', 'a': '@aoec', 'b': 'bdpq6', 'c': 'coaes', 'd': 'dbpq',
-    'e': 'eoca3', 'f': 'ftrl', 'g': 'gqp9y', 'h': 'hnbk', 'i': '!i1lj',
-    'j': 'ji1l', 'k': 'kxh', 'l': '1lij|', 'm': 'mwn', 'n': 'nmhr',
-    'o': '0oecd', 'p': 'pqdb', 'q': 'qpgd9', 'r': 'rnf', 's': '$sz5',
-    't': '+tfl7', 'u': 'uvwn', 'v': 'vwuy', 'w': 'wmvu', 'x': 'x*kz',
-    'y': 'yvg7', 'z': 'z2s7', ' ': ' _-', '.': '.,:', '@': '@a0oQ',
-    '0': '0OQD', '1': '1lIi!', '2': '2Zs', '3': '3E8B', '4': '4AH',
-    '5': '5Ss$', '6': '6Gb9', '7': '7TYL', '8': '8B3&', '9': '9Gq6'
-  };
+let currentIndex = 0;
 
-  let currentWordIndex = 0;
-  let isAnimating = false;
+function getRandomChar() {
+  return morphChars[Math.floor(Math.random() * morphChars.length)];
+}
 
-  function getRandomChar() {
-    return morphChars[Math.floor(Math.random() * morphChars.length)];
+function createChars(text) {
+  display.innerHTML = '';
+  const chars = [];
+
+  for (let i = 0; i < text.length; i++) {
+    const char = document.createElement('span');
+    char.className = 'char';
+
+    const inner = document.createElement('span');
+    inner.className = 'char-inner';
+    inner.textContent = getRandomChar();
+
+    char.appendChild(inner);
+    char.dataset.target = text[i];
+    display.appendChild(char);
+    chars.push(char);
   }
 
-  function getMorphChar(targetChar) {
-    const similar = similarChars[targetChar] || morphChars;
-    return similar[Math.floor(Math.random() * similar.length)];
-  }
+  return chars;
+}
 
-  function createCharElements(text) {
-    display.innerHTML = '';
-    display.setAttribute('data-text', text);
-    const chars = [];
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
 
-    for (let i = 0; i < text.length; i++) {
-      const span = document.createElement('span');
-      span.className = 'char';
-      span.textContent = getRandomChar();
-      span.dataset.target = text[i];
-      span.dataset.index = i;
-      span.style.setProperty('--delay', `${i * 0.1}s`);
-      display.appendChild(span);
-      chars.push(span);
-    }
+async function morphIn(text) {
+  const chars = createChars(text);
 
-    return chars;
-  }
+  // Start all morphing
+  chars.forEach(c => c.classList.add('morphing'));
+  await sleep(50);
 
-  async function morphWord(text) {
-    const chars = createCharElements(text);
-    const morphSteps = 12; // More steps = smoother morph
-    const stepDelay = 35;
-    const staggerDelay = 25;
-
-    // Start all chars morphing
-    chars.forEach(c => c.classList.add('morphing'));
-
-    // Morph each character through similar characters toward target
-    for (let step = 0; step < morphSteps; step++) {
-      await new Promise(r => setTimeout(r, stepDelay));
-
-      chars.forEach((span, i) => {
-        setTimeout(() => {
-          const target = span.dataset.target;
-          const progress = step / morphSteps;
-
-          // As we get closer to the end, more likely to show target
-          if (Math.random() < progress * progress) {
-            span.textContent = target;
-          } else if (Math.random() < progress) {
-            span.textContent = getMorphChar(target);
-          } else {
-            span.textContent = getRandomChar();
-          }
-        }, i * staggerDelay * (1 - step / morphSteps));
-      });
-    }
-
-    // Final lock-in with settle animation
-    await new Promise(r => setTimeout(r, 50));
-
-    chars.forEach((span, i) => {
-      setTimeout(() => {
-        span.textContent = span.dataset.target;
-        span.classList.remove('morphing');
-        span.classList.add('settling');
-
-        setTimeout(() => {
-          span.classList.remove('settling');
-          span.classList.add('settled');
-        }, 300);
-      }, i * 20);
+  // Cycle through random chars while morphing
+  const cycles = 8;
+  for (let c = 0; c < cycles; c++) {
+    await sleep(60);
+    chars.forEach(char => {
+      if (!char.classList.contains('resolved')) {
+        char.querySelector('.char-inner').textContent = getRandomChar();
+      }
     });
-
-    // Wait for all to settle
-    await new Promise(r => setTimeout(r, chars.length * 20 + 300));
   }
 
-  async function morphOut(text) {
-    const chars = Array.from(display.querySelectorAll('.char'));
-    const morphSteps = 8;
-    const stepDelay = 30;
+  // Resolve characters one by one with stagger
+  for (let i = 0; i < chars.length; i++) {
+    await sleep(40);
 
-    // Remove settled wave animation
-    chars.forEach(c => {
-      c.classList.remove('settled');
-      c.classList.add('morphing');
-    });
+    const char = chars[i];
+    char.classList.remove('morphing');
+    char.classList.add('resolving');
+    char.querySelector('.char-inner').textContent = char.dataset.target;
 
-    // Morph away from target
-    for (let step = 0; step < morphSteps; step++) {
-      await new Promise(r => setTimeout(r, stepDelay));
-
-      const progress = step / morphSteps;
-
-      chars.forEach((span, i) => {
-        setTimeout(() => {
-          const target = span.dataset.target;
-          if (Math.random() < progress) {
-            span.textContent = getRandomChar();
-          } else {
-            span.textContent = getMorphChar(target);
-          }
-        }, i * 15);
-      });
-    }
-
-    await new Promise(r => setTimeout(r, 100));
+    // Quick transition to fully resolved
+    setTimeout(() => {
+      char.classList.remove('resolving');
+      char.classList.add('resolved');
+    }, 80);
   }
 
-  async function animateWord(text, holdTime) {
-    isAnimating = true;
+  await sleep(100);
+}
 
-    await morphWord(text);
-    await new Promise(r => setTimeout(r, holdTime));
-    await morphOut(text);
+async function morphOut() {
+  const chars = Array.from(display.querySelectorAll('.char'));
 
-    isAnimating = false;
+  // Exit all at once with slight stagger
+  chars.forEach((char, i) => {
+    setTimeout(() => {
+      char.classList.remove('resolved');
+      char.classList.add('exiting');
+    }, i * 15);
+  });
+
+  await sleep(chars.length * 15 + 150);
+}
+
+async function showWord(text) {
+  await morphIn(text);
+
+  // Hold time based on content
+  let hold = 500;
+  if (text === 'Tilair') hold = 1000;
+  else if (text === 'tilair.com') hold = 1200;
+  else if (text.includes(' ')) hold = 800;
+  else if (text.length <= 2) hold = 300;
+
+  await sleep(hold);
+  await morphOut();
+  await sleep(100);
+}
+
+async function run() {
+  await sleep(300);
+
+  while (true) {
+    await showWord(words[currentIndex]);
+    currentIndex = (currentIndex + 1) % words.length;
   }
+}
 
-  async function run() {
-    // Initial delay
-    await new Promise(r => setTimeout(r, 500));
-
-    while (true) {
-      const word = words[currentWordIndex];
-
-      // Vary hold time based on word importance
-      let holdTime = 600;
-      if (word === 'Tilair') holdTime = 1200;
-      else if (word === 'tilair.com') holdTime = 1500;
-      else if (word === 'Puerto Rico 🇵🇷') holdTime = 1000;
-      else if (word.length <= 2 || word === '/' || word === '@') holdTime = 300;
-      else if (word.includes(' ')) holdTime = 900;
-
-      await animateWord(word, holdTime);
-      await new Promise(r => setTimeout(r, 80));
-
-      currentWordIndex = (currentWordIndex + 1) % words.length;
-    }
-  }
-
-  run();
+run();
 </script>
 
 </body>
