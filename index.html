@@ -36,6 +36,10 @@
     user-select: none;
     color: #fff;
   }
+
+  .char {
+    display: inline-block;
+  }
 </style>
 </head>
 
@@ -72,7 +76,7 @@ const texts = [
   "/",
   "Venture", "Studio",
   "Based", "In",
-  "Puerto Rico 🇵🇷",
+  "Puerto Rico",
   "That", "Builds",
   "and", "Invests", "In",
   "Crypto", "AI",
@@ -91,9 +95,43 @@ let textIndex = texts.length - 1;
 let time = new Date();
 let morph = 0;
 let cooldown = cooldownTime;
+let currentText1 = '';
+let currentText2 = '';
 
-elts.text1.textContent = texts[textIndex % texts.length];
-elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+function wrapChars(text) {
+  let html = '';
+  const chars = [...text];
+  chars.forEach((char, i) => {
+    if (char === ' ') {
+      html += ' ';
+    } else {
+      html += `<span class="char" data-index="${i}">${char}</span>`;
+    }
+  });
+  return html;
+}
+
+function setText(el, text, cache) {
+  if (cache !== text) {
+    el.innerHTML = wrapChars(text);
+    return text;
+  }
+  return cache;
+}
+
+// Organic wave motion
+function updateWave(time) {
+  const chars = document.querySelectorAll('.char');
+  chars.forEach((char) => {
+    const i = parseInt(char.dataset.index) || 0;
+    const y = Math.sin(time * 2 + i * 0.3) * 4;
+    const rotate = Math.sin(time * 1.5 + i * 0.4) * 2;
+    char.style.transform = `translateY(${y}px) rotate(${rotate}deg)`;
+  });
+}
+
+currentText1 = setText(elts.text1, texts[textIndex % texts.length], currentText1);
+currentText2 = setText(elts.text2, texts[(textIndex + 1) % texts.length], currentText2);
 
 function doMorph() {
   morph -= cooldown;
@@ -117,8 +155,8 @@ function setMorph(fraction) {
   elts.text1.style.filter = `blur(${Math.min(8 / inv - 8, 100)}px)`;
   elts.text1.style.opacity = `${Math.pow(inv, 0.4) * 100}%`;
 
-  elts.text1.textContent = texts[textIndex % texts.length];
-  elts.text2.textContent = texts[(textIndex + 1) % texts.length];
+  currentText1 = setText(elts.text1, texts[textIndex % texts.length], currentText1);
+  currentText2 = setText(elts.text2, texts[(textIndex + 1) % texts.length], currentText2);
 }
 
 function doCooldown() {
@@ -130,6 +168,8 @@ function doCooldown() {
   elts.text1.style.opacity = "0%";
 }
 
+let animTime = 0;
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -137,6 +177,10 @@ function animate() {
   let shouldIncrementIndex = cooldown > 0;
   let dt = (newTime - time) / 1000;
   time = newTime;
+  animTime += dt;
+
+  // Update organic wave
+  updateWave(animTime);
 
   cooldown -= dt;
 
