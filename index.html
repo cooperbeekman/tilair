@@ -6,11 +6,7 @@
 <title>Tilair</title>
 
 <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #000;
@@ -21,207 +17,290 @@
     overflow: hidden;
   }
 
-  .display {
-    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-    font-size: clamp(32px, 10vw, 90px);
-    font-weight: 500;
-    color: #fff;
-    text-align: center;
-    letter-spacing: 0.02em;
+  .container {
     position: relative;
+    width: 100%;
+    text-align: center;
     padding: 20px;
+  }
+
+  .display {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    font-size: clamp(36px, 12vw, 120px);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    position: relative;
+    display: inline-block;
   }
 
   .char {
     display: inline-block;
     position: relative;
-    min-width: 0.6em;
-    vertical-align: top;
-  }
-
-  .char-inner {
-    display: block;
-    transition: all 0.12s ease-out;
-  }
-
-  .char.morphing .char-inner {
-    filter: blur(6px);
-    opacity: 0.6;
-    transform: scaleY(1.3) scaleX(0.9);
-  }
-
-  .char.resolving .char-inner {
-    filter: blur(2px);
-    opacity: 0.85;
-    transform: scaleY(1.1);
-  }
-
-  .char.resolved .char-inner {
-    filter: blur(0);
-    opacity: 1;
-    transform: scaleY(1) scaleX(1);
-  }
-
-  /* Subtle glow on resolved text */
-  .char.resolved .char-inner {
-    text-shadow: 0 0 20px rgba(255,255,255,0.3);
-  }
-
-  /* Word exit animation */
-  .char.exiting .char-inner {
-    filter: blur(8px);
     opacity: 0;
-    transform: scaleY(0.7) scaleX(1.2);
+    transform: translateY(20px) scale(0.8);
+    transition: none;
+  }
+
+  .char.enter {
+    animation: charEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .char.scramble {
+    animation: scramble 0.06s steps(1) infinite;
+  }
+
+  .char.exit {
+    animation: charExit 0.15s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  }
+
+  @keyframes charEnter {
+    0% {
+      opacity: 0;
+      transform: translateY(30px) scale(0.7) rotateX(40deg);
+      filter: blur(10px);
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(-5px) scale(1.05);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1) rotateX(0deg);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes charExit {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-40px) scale(0.6);
+      filter: blur(8px);
+    }
+  }
+
+  @keyframes scramble {
+    0% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+    100% { opacity: 0.4; }
+  }
+
+  /* Glitch layers */
+  .glitch-r, .glitch-b {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .display.glitching .glitch-r {
+    animation: glitchR 0.2s steps(2) infinite;
+    color: #f0f;
+    opacity: 0.8;
+  }
+
+  .display.glitching .glitch-b {
+    animation: glitchB 0.2s steps(2) infinite;
+    color: #0ff;
+    opacity: 0.8;
+  }
+
+  @keyframes glitchR {
+    0% { transform: translate(-2px, 0); clip-path: inset(20% 0 60% 0); }
+    25% { transform: translate(2px, 0); clip-path: inset(60% 0 10% 0); }
+    50% { transform: translate(-1px, 0); clip-path: inset(40% 0 30% 0); }
+    75% { transform: translate(1px, 0); clip-path: inset(10% 0 70% 0); }
+    100% { transform: translate(-2px, 0); clip-path: inset(50% 0 20% 0); }
+  }
+
+  @keyframes glitchB {
+    0% { transform: translate(2px, 0); clip-path: inset(60% 0 10% 0); }
+    25% { transform: translate(-2px, 0); clip-path: inset(10% 0 70% 0); }
+    50% { transform: translate(1px, 0); clip-path: inset(30% 0 50% 0); }
+    75% { transform: translate(-1px, 0); clip-path: inset(70% 0 5% 0); }
+    100% { transform: translate(2px, 0); clip-path: inset(15% 0 60% 0); }
+  }
+
+  /* Accent line */
+  .line {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #fff, transparent);
+    transform: translateX(-50%);
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .display.active .line {
+    width: 100%;
+  }
+
+  /* Flash effect */
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .flash.on {
+    animation: flash 0.1s ease-out;
+  }
+
+  @keyframes flash {
+    0% { opacity: 0.3; }
+    100% { opacity: 0; }
   }
 </style>
 </head>
 
 <body>
 
-<div class="display" id="display"></div>
+<div class="flash" id="flash"></div>
+
+<div class="container">
+  <div class="display" id="display">
+    <span class="glitch-r" id="glitchR"></span>
+    <span class="glitch-b" id="glitchB"></span>
+    <span class="content" id="content"></span>
+    <span class="line"></span>
+  </div>
+</div>
 
 <script>
+const content = document.getElementById('content');
 const display = document.getElementById('display');
+const glitchR = document.getElementById('glitchR');
+const glitchB = document.getElementById('glitchB');
+const flash = document.getElementById('flash');
 
 const words = [
-  "...",
-  "..",
-  ".",
+  "...", "..", ".",
   "Tilair",
-  "Is",
-  "A",
-  "Holding",
-  "Company",
+  "Is", "A",
+  "Holding", "Company",
   "/",
-  "Venture",
-  "Studio",
-  "Based",
-  "In",
+  "Venture", "Studio",
+  "Based", "In",
   "Puerto Rico 🇵🇷",
-  "That",
-  "Builds",
-  "and",
-  "Invests",
-  "In",
-  "Crypto",
-  "AI",
+  "That", "Builds",
+  "and", "Invests", "In",
+  "Crypto", "AI",
   "Health Tech",
   "Online Education",
   "Defense Tech",
-  "For",
-  "All",
-  "Inquiries",
+  "For", "All", "Inquiries",
   "Email",
-  "cole",
-  "@",
-  "tilair.com"
+  "cole", "@", "tilair.com"
 ];
 
-const morphChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&';
+let idx = 0;
 
-let currentIndex = 0;
+const rand = () => chars[Math.floor(Math.random() * chars.length)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function getRandomChar() {
-  return morphChars[Math.floor(Math.random() * morphChars.length)];
-}
+async function animateIn(text) {
+  content.innerHTML = '';
+  glitchR.textContent = text;
+  glitchB.textContent = text;
 
-function createChars(text) {
-  display.innerHTML = '';
-  const chars = [];
+  const spans = [];
 
   for (let i = 0; i < text.length; i++) {
-    const char = document.createElement('span');
-    char.className = 'char';
-
-    const inner = document.createElement('span');
-    inner.className = 'char-inner';
-    inner.textContent = getRandomChar();
-
-    char.appendChild(inner);
-    char.dataset.target = text[i];
-    display.appendChild(char);
-    chars.push(char);
+    const span = document.createElement('span');
+    span.className = 'char scramble';
+    span.textContent = rand();
+    span.dataset.target = text[i];
+    content.appendChild(span);
+    spans.push(span);
   }
 
-  return chars;
-}
+  // Quick glitch burst
+  display.classList.add('glitching');
+  await sleep(80);
+  display.classList.remove('glitching');
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+  // Rapid scramble then reveal
+  const scrambleTime = Math.min(text.length * 15, 150);
+  const scrambleEnd = Date.now() + scrambleTime;
 
-async function morphIn(text) {
-  const chars = createChars(text);
+  while (Date.now() < scrambleEnd) {
+    spans.forEach(s => { if (s.classList.contains('scramble')) s.textContent = rand(); });
+    await sleep(25);
+  }
 
-  // Start all morphing
-  chars.forEach(c => c.classList.add('morphing'));
+  // Reveal characters rapidly
+  for (let i = 0; i < spans.length; i++) {
+    const span = spans[i];
+    span.classList.remove('scramble');
+    span.classList.add('enter');
+    span.textContent = span.dataset.target;
+    await sleep(text.length > 10 ? 20 : 30);
+  }
+
+  display.classList.add('active');
   await sleep(50);
-
-  // Cycle through random chars while morphing
-  const cycles = 8;
-  for (let c = 0; c < cycles; c++) {
-    await sleep(60);
-    chars.forEach(char => {
-      if (!char.classList.contains('resolved')) {
-        char.querySelector('.char-inner').textContent = getRandomChar();
-      }
-    });
-  }
-
-  // Resolve characters one by one with stagger
-  for (let i = 0; i < chars.length; i++) {
-    await sleep(40);
-
-    const char = chars[i];
-    char.classList.remove('morphing');
-    char.classList.add('resolving');
-    char.querySelector('.char-inner').textContent = char.dataset.target;
-
-    // Quick transition to fully resolved
-    setTimeout(() => {
-      char.classList.remove('resolving');
-      char.classList.add('resolved');
-    }, 80);
-  }
-
-  await sleep(100);
 }
 
-async function morphOut() {
-  const chars = Array.from(display.querySelectorAll('.char'));
+async function animateOut() {
+  const spans = Array.from(content.querySelectorAll('.char'));
 
-  // Exit all at once with slight stagger
-  chars.forEach((char, i) => {
+  display.classList.remove('active');
+
+  // Flash on exit
+  flash.classList.add('on');
+  setTimeout(() => flash.classList.remove('on'), 100);
+
+  // Quick glitch
+  display.classList.add('glitching');
+  await sleep(50);
+  display.classList.remove('glitching');
+
+  // Exit all at once with tiny stagger
+  spans.forEach((span, i) => {
     setTimeout(() => {
-      char.classList.remove('resolved');
-      char.classList.add('exiting');
-    }, i * 15);
+      span.classList.remove('enter');
+      span.classList.add('exit');
+    }, i * 8);
   });
 
-  await sleep(chars.length * 15 + 150);
+  await sleep(spans.length * 8 + 120);
 }
 
-async function showWord(text) {
-  await morphIn(text);
+async function show(text) {
+  await animateIn(text);
 
-  // Hold time based on content
-  let hold = 500;
-  if (text === 'Tilair') hold = 1000;
-  else if (text === 'tilair.com') hold = 1200;
-  else if (text.includes(' ')) hold = 800;
-  else if (text.length <= 2) hold = 300;
+  // Dynamic hold time
+  let hold = 350;
+  if (text === 'Tilair') hold = 600;
+  else if (text === 'tilair.com') hold = 800;
+  else if (text.includes(' ')) hold = 500;
+  else if (text.length <= 2) hold = 200;
 
   await sleep(hold);
-  await morphOut();
-  await sleep(100);
+  await animateOut();
+  await sleep(60);
 }
 
 async function run() {
-  await sleep(300);
-
+  await sleep(200);
   while (true) {
-    await showWord(words[currentIndex]);
-    currentIndex = (currentIndex + 1) % words.length;
+    await show(words[idx]);
+    idx = (idx + 1) % words.length;
   }
 }
 
