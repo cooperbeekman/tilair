@@ -5,161 +5,292 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tilair</title>
 
-<link href="https://fonts.googleapis.com/css?family=Raleway:900&display=swap" rel="stylesheet">
-
 <style>
-  body {
+  * {
     margin: 0;
     padding: 0;
-    background: #f6f3ee; /* parchment-ish */
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #0a0a0a;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    color: #0b0b0b;
-  }
-
-  .inkrev {
-    position: relative;
-    width: 100%;
-    max-width: 1200px;
-    height: 220px;
+    min-height: 100vh;
+    font-family: 'Courier New', Courier, monospace;
+    color: #00ff41;
     overflow: hidden;
   }
 
-  .inkrev-base {
+  .terminal {
+    width: 90%;
+    max-width: 800px;
+    background: #0d0d0d;
+    border: 2px solid #00ff41;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.3),
+                inset 0 0 30px rgba(0, 255, 65, 0.05);
+    position: relative;
+  }
+
+  .terminal::before {
+    content: '┌─────────────────────────────────────────────────────────┐';
+    display: block;
+    margin-bottom: 10px;
+    color: #00ff41;
+    opacity: 0.6;
+  }
+
+  .terminal::after {
+    content: '└─────────────────────────────────────────────────────────┘';
+    display: block;
+    margin-top: 10px;
+    color: #00ff41;
+    opacity: 0.6;
+  }
+
+  .ascii-container {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .ascii-art {
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: pre;
+    text-align: center;
+    letter-spacing: 0;
+    animation: textGlow 2s ease-in-out infinite;
+  }
+
+  .ascii-text {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    margin: 20px 0;
+    opacity: 0;
+    animation: typewriterFade 0.8s ease-out forwards;
+  }
+
+  .ascii-subtitle {
+    font-size: 16px;
+    margin-top: 10px;
+    opacity: 0;
+    animation: typewriterFade 0.8s ease-out 0.3s forwards;
+  }
+
+  .glitch-layer {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    font-family: 'Raleway', system-ui, sans-serif;
-    font-weight: 900;
-    font-size: 72px;
-    line-height: 1;
-    text-align: center;
-
+    font-size: 14px;
     opacity: 0;
-    transform: translateY(6px);
-    user-select: none;
+    pointer-events: none;
   }
 
-  .inkrev-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+  .glitch-layer.active {
+    animation: glitchFlash 0.6s ease-out;
   }
 
-  .inkrev-ink rect {
-    fill: #0b0b0b;
+  .cursor {
+    display: inline-block;
+    width: 10px;
+    height: 20px;
+    background: #00ff41;
+    margin-left: 5px;
+    animation: blink 1s step-end infinite;
   }
 
-  .inkrev.play .inkrev-ink {
-    animation: inkRecede 1.1s cubic-bezier(.22,.9,.2,1) both;
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
   }
 
-  .inkrev.play .inkrev-base {
-    animation: baseIn 1.1s cubic-bezier(.22,.9,.2,1) both;
+  @keyframes typewriterFade {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  @keyframes inkRecede {
-    0%   { opacity: 0;   transform: scaleX(0.92) scaleY(0.88); filter: blur(2px); }
-    12%  { opacity: 1;   transform: scaleX(1.02) scaleY(1.00); filter: blur(0.6px); }
-    55%  { opacity: 1;   transform: scaleX(1.00) scaleY(1.00); }
-    100% { opacity: 0;   transform: scaleX(1.06) scaleY(1.02); filter: blur(1px); }
+  @keyframes glitchFlash {
+    0% { opacity: 0; }
+    10% { opacity: 0.8; transform: translateX(-2px); }
+    20% { opacity: 0; transform: translateX(2px); }
+    30% { opacity: 0.6; transform: translateX(-1px); }
+    40% { opacity: 0; }
+    100% { opacity: 0; }
   }
 
-  @keyframes baseIn {
-    0%   { opacity: 0; transform: translateY(6px); }
-    55%  { opacity: 0; transform: translateY(6px); }
-    78%  { opacity: 1; transform: translateY(0px); }
-    100% { opacity: 1; transform: translateY(0px); }
+  @keyframes textGlow {
+    0%, 100% {
+      text-shadow: 0 0 5px rgba(0, 255, 65, 0.5),
+                   0 0 10px rgba(0, 255, 65, 0.3);
+    }
+    50% {
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.8),
+                   0 0 20px rgba(0, 255, 65, 0.5),
+                   0 0 30px rgba(0, 255, 65, 0.3);
+    }
   }
 
   @media (max-width: 768px) {
-    .inkrev { height: 180px; }
-    .inkrev-base { font-size: 52px; }
+    .terminal {
+      padding: 15px;
+    }
+    .ascii-art {
+      font-size: 10px;
+    }
+    .ascii-text {
+      font-size: 24px;
+      letter-spacing: 2px;
+    }
+    .ascii-subtitle {
+      font-size: 14px;
+    }
   }
 </style>
 </head>
 
 <body>
 
-<div class="inkrev" id="inkrev">
-  <div class="inkrev-base"></div>
-
-  <svg class="inkrev-svg" viewBox="0 0 1200 220" preserveAspectRatio="none">
-    <defs>
-      <filter id="ink-noise">
-        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" result="noise">
-          <animate attributeName="baseFrequency" dur="1.1s" values="0.012;0.02;0.012" repeatCount="1" />
-        </feTurbulence>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="28" />
-        <feGaussianBlur stdDeviation="0.8" />
-      </filter>
-
-      <mask id="ink-cutout">
-        <rect x="0" y="0" width="1200" height="220" fill="white"/>
-        <text id="maskText"
-              x="50%" y="55%"
-              text-anchor="middle"
-              dominant-baseline="middle"
-              fill="black"
-              font-family="Raleway, system-ui, sans-serif"
-              font-weight="900"
-              font-size="96">
-          Tilair
-        </text>
-      </mask>
-    </defs>
-
-    <g class="inkrev-ink" filter="url(#ink-noise)" mask="url(#ink-cutout)">
-      <rect x="0" y="0" width="1200" height="220" rx="34" ry="34"></rect>
-    </g>
-  </svg>
+<div class="terminal">
+  <div class="ascii-container" id="container">
+    <div class="glitch-layer" id="glitch"></div>
+    <div class="ascii-art" id="asciiArt"></div>
+    <div class="ascii-text" id="mainText"></div>
+    <div class="ascii-subtitle" id="subText"></div>
+  </div>
 </div>
 
 <script>
-  const root = document.getElementById("inkrev");
-  const base = root.querySelector(".inkrev-base");
-  const maskText = document.getElementById("maskText");
+  const asciiArtElement = document.getElementById('asciiArt');
+  const mainTextElement = document.getElementById('mainText');
+  const subTextElement = document.getElementById('subText');
+  const glitchElement = document.getElementById('glitch');
 
-  const words = [
-    "...", "..", ".",
-    "Tilair",
-    "Is",
-    "A",
-    "Holding Company",
-    "Venture Studio",
-    "Puerto Rico",
-    "Crypto",
-    "AI",
-    "Defense Tech",
-    "cole@tilair.com"
+  const asciiLogos = {
+    tilair: `
+ _____ _ _       _
+|_   _(_) | __ _(_)_ __
+  | | | | |/ _\` | | '__|
+  | | | | | (_| | | |
+  |_| |_|_|\\__,_|_|_|
+    `,
+    crypto: `
+   ___                 _
+  / __\\ __ _   _ _ __ | |_ ___
+ / / | '__| | | | '_ \\| __/ _ \\
+/ /__| |  | |_| | |_) | || (_) |
+\\____/_|   \\__, | .__/ \\__\\___/
+           |___/|_|
+    `,
+    ai: `
+    _    ___
+   / \\  |_ _|
+  / _ \\  | |
+ / ___ \\ | |
+/_/   \\_\\___|
+    `,
+    defense: `
+ ___       __
+|   \\ ___ / _|___ _ _  ___ ___
+| |) / -_)  _/ -_) ' \\(_-</ -_)
+|___/\\___|_| \\___|_||_/__/\\___|
+    `,
+    studio: `
+ ___ _           _ _
+/ __| |_ _  _ __| (_)___
+\\__ \\ _| || / _\` | / _ \\
+|___/\\__|\\__,_\\__,_|_\\___/
+    `
+  };
+
+  const sequences = [
+    { art: null, main: "...", sub: "" },
+    { art: null, main: "..", sub: "" },
+    { art: null, main: ".", sub: "" },
+    { art: "tilair", main: "TILAIR", sub: "" },
+    { art: null, main: "TILAIR", sub: "Is" },
+    { art: null, main: "TILAIR", sub: "A Holding Company" },
+    { art: "studio", main: "VENTURE", sub: "Studio" },
+    { art: null, main: "PUERTO RICO", sub: "" },
+    { art: "crypto", main: "CRYPTO", sub: "" },
+    { art: "ai", main: "AI", sub: "" },
+    { art: "defense", main: "DEFENSE TECH", sub: "" },
+    { art: null, main: "cole@tilair.com", sub: "" }
   ];
 
-  const animMs = 1100;
-  const holdMs = 500;
-  let i = 0;
+  let currentIndex = 0;
 
-  function play(word) {
-    base.textContent = word;
-    maskText.textContent = word;
-
-    root.classList.remove("play");
-    void root.offsetWidth; // force restart
-    root.classList.add("play");
+  function generateGlitch() {
+    const chars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let glitchText = '';
+    for (let i = 0; i < 50; i++) {
+      glitchText += chars.charAt(Math.floor(Math.random() * chars.length));
+      if (i % 10 === 9) glitchText += '\n';
+    }
+    return glitchText;
   }
 
-  function next() {
-    play(words[i % words.length]);
-    i++;
-    setTimeout(next, animMs + holdMs);
+  function showGlitch() {
+    glitchElement.textContent = generateGlitch();
+    glitchElement.classList.add('active');
+    setTimeout(() => {
+      glitchElement.classList.remove('active');
+    }, 600);
   }
 
-  next();
+  function displaySequence(seq) {
+    // Show glitch effect randomly
+    if (Math.random() > 0.6) {
+      showGlitch();
+    }
+
+    // Update ASCII art
+    if (seq.art) {
+      asciiArtElement.textContent = asciiLogos[seq.art];
+      asciiArtElement.style.display = 'block';
+    } else {
+      asciiArtElement.style.display = 'none';
+    }
+
+    // Update main text
+    mainTextElement.textContent = seq.main;
+    mainTextElement.style.animation = 'none';
+    void mainTextElement.offsetWidth; // Trigger reflow
+    mainTextElement.style.animation = 'typewriterFade 0.8s ease-out forwards';
+
+    // Update subtitle
+    subTextElement.textContent = seq.sub;
+    subTextElement.style.animation = 'none';
+    void subTextElement.offsetWidth; // Trigger reflow
+    subTextElement.style.animation = 'typewriterFade 0.8s ease-out 0.3s forwards';
+  }
+
+  function nextSequence() {
+    displaySequence(sequences[currentIndex]);
+    currentIndex = (currentIndex + 1) % sequences.length;
+    setTimeout(nextSequence, 2000);
+  }
+
+  // Start the animation
+  nextSequence();
 </script>
 
 </body>
