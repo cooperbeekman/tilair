@@ -182,18 +182,31 @@
     "Tilair",
     "Is",
     "A",
-    "Holding Company",
-    "And",
-    "Venture Studio",
-    "Based In",
-    "Puerto Rico",
-    "We Build",
+    "Holding",
+    "Company",
+    "/",
+    "Venture",
+    "Studio",
+    "Based",
+    "In",
+    "Puerto Rico 🇵🇷",
+    "That",
+    "Builds",
+    "and",
+    "Invests",
+    "In",
     "Crypto",
     "AI",
+    "Health Tech",
+    "Online Education",
     "Defense Tech",
-    "And More",
-    "Get In Touch",
-    "cole@tilair.com"
+    "For",
+    "All",
+    "Inquiries",
+    "Email",
+    "cole",
+    "@",
+    "tilair.com"
   ];
 
   // Characters for morphing - ordered by visual similarity for smoother transitions
@@ -347,11 +360,12 @@
       const word = words[currentWordIndex];
 
       // Vary hold time based on word importance
-      let holdTime = 800;
-      if (word === 'Tilair') holdTime = 1500;
-      else if (word === 'cole@tilair.com') holdTime = 2000;
-      else if (word.length <= 2) holdTime = 400;
-      else if (word.includes(' ')) holdTime = 1200;
+      let holdTime = 600;
+      if (word === 'Tilair') holdTime = 1200;
+      else if (word === 'tilair.com') holdTime = 1500;
+      else if (word === 'Puerto Rico 🇵🇷') holdTime = 1000;
+      else if (word.length <= 2 || word === '/' || word === '@') holdTime = 300;
+      else if (word.includes(' ')) holdTime = 900;
 
       await animateWord(word, holdTime);
       await new Promise(r => setTimeout(r, 80));
